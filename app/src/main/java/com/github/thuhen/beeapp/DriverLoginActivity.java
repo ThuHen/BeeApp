@@ -24,12 +24,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.FirebaseDatabaseKtxRegistrar;
 
-public class DriverLoginActivity extends AppCompatActivity {
-private EditText editTextMail , editTextPassword;
-private Button mLogin, mRegistration;
+import java.util.Objects;
 
-private FirebaseAuth mAuth;
-private FirebaseAuth.AuthStateListener firebaseAuthListener;
+public class DriverLoginActivity extends AppCompatActivity {
+    private EditText editTextMail , editTextPassword;
+    private Button mLogin, mRegistration;
+
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener firebaseAuthListener;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,11 +42,14 @@ private FirebaseAuth.AuthStateListener firebaseAuthListener;
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
         editTextMail = findViewById(R.id.txt_email);
         editTextPassword = findViewById(R.id.txt_password);
         mLogin = findViewById(R.id.btn_login);
         mRegistration = findViewById(R.id.btn_registration);
+
         mAuth = FirebaseAuth.getInstance();
+///dang nhap tu dong
         firebaseAuthListener= new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -53,7 +58,7 @@ private FirebaseAuth.AuthStateListener firebaseAuthListener;
                     Intent intent = new Intent(DriverLoginActivity.this,MapActivity.class);
                     startActivity(intent);
                     finish();
-                    return;
+                    //return;
                 }
             }
 
@@ -69,14 +74,18 @@ private FirebaseAuth.AuthStateListener firebaseAuthListener;
                    @Override
                    public void onComplete(@NonNull Task<AuthResult> task) {
                        if (!task.isSuccessful()){
-                           Toast.makeText(DriverLoginActivity.this,"Sign up error",
+                           Toast.makeText(DriverLoginActivity.this,R.string.sign_up_error,
                                    Toast.LENGTH_SHORT).show();
-                       }else {
-                           String user_id= mAuth.getCurrentUser().getUid();
+                       }
+                       else
+                       {
+                           String user_id= Objects.requireNonNull(mAuth.getCurrentUser()).getUid();///
                            DatabaseReference current_user_db= FirebaseDatabase.getInstance()
                                    .getReference().child("Users").child("Drivers")
                                    .child("user").child("driver").child(user_id);
                            current_user_db.setValue(true);
+                           Toast.makeText(DriverLoginActivity.this,R.string.sign_up_sucessful,
+                                   Toast.LENGTH_SHORT).show();
                        }
                    }
                });
@@ -87,14 +96,32 @@ private FirebaseAuth.AuthStateListener firebaseAuthListener;
         mLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                final String email =editTextMail.getText().toString();
+                final String password= editTextPassword.getText().toString();
+                mAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener
+                        (DriverLoginActivity.this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (!task.isSuccessful()){
+                                    Toast.makeText(DriverLoginActivity.this,R.string.sign_in_error,
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                                else {
+                                    Toast.makeText(DriverLoginActivity.this,R.string.sign_in_sucessful,
+                                            Toast.LENGTH_SHORT).show();
+                                    Intent intent = new Intent(DriverLoginActivity.this, MapActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                }
+                            }
+                        });
             }
         });
     }
     @Override
     protected void onStart(){
         super.onStart();
-        mAuth.addAuthStateListener(firebaseAuthListener);
+       // mAuth.addAuthStateListener(firebaseAuthListener);
     }
     @Override
     protected void onStop(){

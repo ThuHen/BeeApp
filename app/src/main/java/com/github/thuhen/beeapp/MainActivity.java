@@ -25,25 +25,20 @@ private Button mDriver, mCustomer;
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        mDriver=(Button) findViewById(R.id.driver);
-        mCustomer=(Button) findViewById(R.id.customer);
-        mDriver.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent (MainActivity.this, DriverLoginActivity.class);
-                startActivity(intent);
-                finish();
-                return;
-            }
+        mDriver= findViewById(R.id.driver);
+        mCustomer=findViewById(R.id.customer);
+
+        mDriver.setOnClickListener(view -> {
+            Intent intent = new Intent (MainActivity.this, DriverLoginActivity.class);
+            startActivity(intent);
+            finish();
+           // return;
         });
-        mCustomer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent (MainActivity.this, CostomerLoginActivity.class);
-                startActivity(intent);
-                finish();
-                return;
-            }
+        mCustomer.setOnClickListener(view -> {
+            Intent intent = new Intent (MainActivity.this, CustomerLoginActivity.class);
+            startActivity(intent);
+            finish();
+            //return;
         });
     }
 }

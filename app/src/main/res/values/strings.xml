@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">BeeApp</string>
+    <string name="sign_up_error">Sign up error</string>
+    <string name="sign_up_sucessful">Registration successful, please login</string>
+    <string name="sign_in_error">Sign in error</string>
+    <string name="sign_in_sucessful">Login sucessful</string>
+    <string name="im_a_driver">I\'M A DRIVER</string>
+    <string name="im_a_customer">I\'M A CUSTOMERS</string>
+    <string name="registration">Registration</string>
+    <string name="login">Login</string>
+    <string name="password">password</string>
+    <string name="email">email</string>
 </resources>

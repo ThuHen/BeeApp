@@ -10,31 +10,29 @@
     android:gravity="center">
     <EditText
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
+        android:padding="10dp"
         android:id="@+id/txt_email"
-        android:hint="email"/>
+        android:hint="@string/email"/>
     <EditText
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
+        android:padding="10dp"
         android:id="@+id/txt_password"
-        android:hint="password"/>
-    <LinearLayout
+        android:hint="@string/password"/>
+
+    <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Login"
+        android:text="@string/login"
         android:id="@+id/btn_login"/>
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Registration"
+        android:text="@string/registration"
         android:id="@+id/btn_registration"/>
 
 
-    </LinearLayout>
+
 
 </LinearLayout>

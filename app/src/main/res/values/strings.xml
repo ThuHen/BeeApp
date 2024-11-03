@@ -10,4 +10,7 @@
     <string name="login">Login</string>
     <string name="password">password</string>
     <string name="email">email</string>
+    <string name="title_activity_driver_map">DriverMapActivity</string>
+    <string name="maps_api_key">AIzaSyAFaAJ_j7LyuoGQK25zcPNd5x0YxtfmJdY</string>
+
 </resources>

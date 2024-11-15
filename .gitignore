@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+# Không bỏ qua thư mục app, nơi chứa mã nguồn chính của dự án
+!/app

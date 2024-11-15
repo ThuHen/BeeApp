@@ -12,5 +12,8 @@
     <string name="email">email</string>
     <string name="title_activity_driver_map">DriverMapActivity</string>
     <string name="maps_api_key">AIzaSyAFaAJ_j7LyuoGQK25zcPNd5x0YxtfmJdY</string>
+    <string name="location_permission_accepted">Permission Accepted</string>
+    <string name="location_permission_denied">Permission Rejected</string>
+    <string name="location_not_found">location is null</string>
 
 </resources>

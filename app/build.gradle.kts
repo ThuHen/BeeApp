@@ -44,6 +44,16 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-database")
+    // Full GeoFire library for Realtime Database users
+    implementation ("com.firebase:geofire-android:3.2.0")
+
+    // GeoFire utililty functions for Cloud Firestore users who
+    // want to implement their own geo solution, see:
+    // https://firebase.google.com/docs/firestore/solutions/geoqueries
+    implementation ("com.firebase:geofire-android-common:3.2.0")
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
+
+
 
     implementation(libs.appcompat)
     implementation(libs.material)

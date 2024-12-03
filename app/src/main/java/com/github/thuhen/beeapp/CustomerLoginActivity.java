@@ -93,7 +93,7 @@ public class CustomerLoginActivity extends AppCompatActivity {
                             else {
                                 Toast.makeText(CustomerLoginActivity.this,R.string.sign_in_sucessful,
                                         Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(CustomerLoginActivity.this, MapActivity.class);
+                                Intent intent = new Intent(CustomerLoginActivity.this, CustomerMapActivity.class);
                                 startActivity(intent);
                                 finish();
                             }

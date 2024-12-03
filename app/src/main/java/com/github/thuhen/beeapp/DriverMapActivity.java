@@ -8,10 +8,13 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -26,6 +29,16 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.github.thuhen.beeapp.databinding.ActivityDriverMapBinding;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class DriverMapActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -33,6 +46,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private ActivityDriverMapBinding binding;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
+    private Button mLogout;
+    private String customerId = "";
 
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "DriverMapActivity"; // Tag dùng trong Logcat
@@ -59,8 +74,98 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         // Initialize location services
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         checkLocationPermission();
+
+        mLogout = (Button) findViewById(R.id.logout);
+        mLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FirebaseAuth.getInstance().signOut();
+                Intent intent = new Intent(DriverMapActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+
+            }
+        });
+        getAssignedCustomer();
     }
 
+
+    private void getAssignedCustomer(){
+        String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId);
+        assignedCustomerRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
+                    if(map.get("customerRideId") != null){
+                        customerId = map.get("customerRideId").toString();
+                        getAssignedCustomerPickupLocation();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+    private void getAssignedCustomerPickupLocation(){
+        DatabaseReference assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerId).child("i");
+        assignedCustomerPickupLocationRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    try {
+                        // Ép kiểu thành Map để trích xuất thông tin
+                        List<Object> map = (List<Object>) snapshot.getValue();
+                        if (map != null) {
+                            double locationLat = 0;
+                            double locationLng = 0;
+
+                            // Kiểm tra và lấy tọa độ
+                            if (map.get(0) != null) {
+                                locationLat = Double.parseDouble(map.get(0).toString());
+                            } else {
+                                Log.e(TAG, "onDataChange: Latitude is null");
+                            }
+
+                            if (map.get(1) != null) { // Chỉnh `map.get(1)` thay vì `map.get(0)` để lấy longitude
+                                locationLng = Double.parseDouble(map.get(1).toString());
+                            } else {
+                                Log.e(TAG, "onDataChange: Longitude is null");
+                            }
+
+                            // Tạo marker chỉ khi tọa độ hợp lệ
+                            if (locationLat != 0 && locationLng != 0) {
+                                LatLng driverLatLng = new LatLng(locationLat, locationLng);
+                                mMap.addMarker(new MarkerOptions()
+                                        .position(driverLatLng)
+                                        .title("Pickup Location"));
+                                Log.d(TAG, "onDataChange: Added marker at Lat: " + locationLat + ", Lng: " + locationLng);
+                            } else {
+                                Log.w(TAG, "onDataChange: Invalid location coordinates");
+                            }
+                        } else {
+                            Log.e(TAG, "onDataChange: Data map is null");
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "onDataChange: Error parsing location data", e);
+                    }
+                } else {
+                    Log.w(TAG, "onDataChange: Snapshot does not exist");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
     private void checkLocationPermission() {
         Log.d(TAG, "checkLocationPermission: Checking permissions");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&

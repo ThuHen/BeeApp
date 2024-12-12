@@ -17,6 +17,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -224,6 +226,12 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     mMap.clear(); // Xóa marker cũ
                     mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15));
+
+                    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    DatabaseReference userLocationRef = FirebaseDatabase.getInstance().getReference("driverAvailable");
+
+                    GeoFire geoFire = new GeoFire(userLocationRef);
+                    geoFire.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
                 }
             }
         };
@@ -251,9 +259,26 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     protected void onStop() {
         super.onStop();
+
         Log.d(TAG, "onStop: Removing location updates");
+
+        // Xóa cập nhật vị trí từ FusedLocationProviderClient
         if (locationCallback != null) {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
+
+        // Xóa vị trí của người dùng khỏi Firebase
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference userLocationRef = FirebaseDatabase.getInstance().getReference("driverAvailable");
+        GeoFire geoFire = new GeoFire(userLocationRef);
+
+        geoFire.removeLocation(userId, (key, error) -> {
+            if (error != null) {
+                Log.e(TAG, "Failed to remove location: " + error.getMessage());
+            } else {
+                Log.d(TAG, "Location successfully removed for userId: " + userId);
+            }
+        });
     }
+
 }

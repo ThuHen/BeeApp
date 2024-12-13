@@ -64,64 +64,52 @@ public class DriverLoginActivity extends AppCompatActivity {
 
         };
 
-        mRegistration.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-               final String email =editTextMail.getText().toString();
-               final String password= editTextPassword.getText().toString();
-               mAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener
-                       (DriverLoginActivity.this, new OnCompleteListener<AuthResult>() {
-                   @Override
-                   public void onComplete(@NonNull Task<AuthResult> task) {
-                       if (!task.isSuccessful()){
-                           Toast.makeText(DriverLoginActivity.this,R.string.sign_up_error,
-                                   Toast.LENGTH_SHORT).show();
-                       }
-                       else
-                       {
-                           String user_id= Objects.requireNonNull(mAuth.getCurrentUser()).getUid();///
-                           DatabaseReference current_user_db= FirebaseDatabase.getInstance()
-                                   .getReference().child("Users").child("Drivers")
-                                   .child("user").child("driver").child(user_id);
-                           current_user_db.setValue(true);
-                           Toast.makeText(DriverLoginActivity.this,R.string.sign_up_sucessful,
-                                   Toast.LENGTH_SHORT).show();
-                       }
-                   }
-               });
+        mRegistration.setOnClickListener(v -> {
+            final String email = editTextMail.getText().toString();
+            final String password = editTextPassword.getText().toString();
+            mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener
+                    (DriverLoginActivity.this, task -> {
+                        if (!task.isSuccessful()) {
+                            Toast.makeText(DriverLoginActivity.this, R.string.sign_up_error,
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            String user_id = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
+                            DatabaseReference current_user_db = FirebaseDatabase.getInstance()
+                                    .getReference().child("Users").child("Drivers")
+                                    .child(user_id);
+                            current_user_db.setValue(true);
+                            Toast.makeText(DriverLoginActivity.this, R.string.sign_up_sucessful,
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
 
-            }
         });
 
-        mLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                final String email =editTextMail.getText().toString();
-                final String password= editTextPassword.getText().toString();
-                mAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener
-                        (DriverLoginActivity.this, new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                if (!task.isSuccessful()){
-                                    Toast.makeText(DriverLoginActivity.this,R.string.sign_in_error,
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                                else {
-                                    Toast.makeText(DriverLoginActivity.this,R.string.sign_in_sucessful,
-                                            Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(DriverLoginActivity.this, DriverMapActivity.class);
-                                    startActivity(intent);
-                                    finish();
-                                }
+        mLogin.setOnClickListener(view -> {
+            final String email = editTextMail.getText().toString();
+            final String password = editTextPassword.getText().toString();
+            mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener
+                    (DriverLoginActivity.this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (!task.isSuccessful()) {
+                                Toast.makeText(DriverLoginActivity.this, R.string.sign_in_error,
+                                        Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(DriverLoginActivity.this, R.string.sign_in_sucessful,
+                                        Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(DriverLoginActivity.this, DriverMapActivity.class);
+                                startActivity(intent);
+                                finish();
                             }
-                        });
-            }
+                        }
+                    });
         });
     }
     @Override
     protected void onStart(){
         super.onStart();
-       // mAuth.addAuthStateListener(firebaseAuthListener);
+        //mAuth.addAuthStateListener(firebaseAuthListener);
     }
     @Override
     protected void onStop(){

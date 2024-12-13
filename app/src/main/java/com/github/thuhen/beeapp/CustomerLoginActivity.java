@@ -25,11 +25,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.Objects;
 
 public class CustomerLoginActivity extends AppCompatActivity {
-    private EditText editTextMail , editTextPassword;
+    private EditText editTextMail, editTextPassword;
     private Button mLogin, mRegistration;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener firebaseAuthListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,10 +49,10 @@ public class CustomerLoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 ///auto signin
-        firebaseAuthListener= firebaseAuth -> {
+        firebaseAuthListener = firebaseAuth -> {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            if(user != null){
-                Intent intent = new Intent(CustomerLoginActivity.this,CustomerMapActivity.class);
+            if (user != null) {
+                Intent intent = new Intent(CustomerLoginActivity.this, CustomerMapActivity.class);
                 startActivity(intent);
                 finish();
                 //return;
@@ -59,20 +60,20 @@ public class CustomerLoginActivity extends AppCompatActivity {
         };
 
         mRegistration.setOnClickListener(v -> {
-            final String email =editTextMail.getText().toString();
-            final String password= editTextPassword.getText().toString();
-            mAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener
+            final String email = editTextMail.getText().toString();
+            final String password = editTextPassword.getText().toString();
+            mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener
                     (CustomerLoginActivity.this, task -> {
                         if (!task.isSuccessful()) {
                             Toast.makeText(CustomerLoginActivity.this, R.string.sign_up_error,
                                     Toast.LENGTH_SHORT).show();
                         } else {
-                            String user_id = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();///
+                            String user_id = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
                             DatabaseReference current_user_db = FirebaseDatabase.getInstance()
-                                    .getReference().child("Users").child("Drivers")
-                                    .child("user").child("driver").child(user_id);
+                                    .getReference().child("Users").child("Customers")
+                                    .child(user_id);
                             current_user_db.setValue(true);
-                            Toast.makeText(CustomerLoginActivity.this,R.string.sign_up_sucessful,
+                            Toast.makeText(CustomerLoginActivity.this, R.string.sign_up_sucessful,
                                     Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -80,18 +81,17 @@ public class CustomerLoginActivity extends AppCompatActivity {
         });
 
         mLogin.setOnClickListener(view -> {
-            final String email =editTextMail.getText().toString();
-            final String password= editTextPassword.getText().toString();
-            mAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener
+            final String email = editTextMail.getText().toString();
+            final String password = editTextPassword.getText().toString();
+            mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener
                     (CustomerLoginActivity.this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
-                            if (!task.isSuccessful()){
-                                Toast.makeText(CustomerLoginActivity.this,R.string.sign_in_error,
+                            if (!task.isSuccessful()) {
+                                Toast.makeText(CustomerLoginActivity.this, R.string.sign_in_error,
                                         Toast.LENGTH_SHORT).show();
-                            }
-                            else {
-                                Toast.makeText(CustomerLoginActivity.this,R.string.sign_in_sucessful,
+                            } else {
+                                Toast.makeText(CustomerLoginActivity.this, R.string.sign_in_sucessful,
                                         Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(CustomerLoginActivity.this, CustomerMapActivity.class);
                                 startActivity(intent);
@@ -101,13 +101,15 @@ public class CustomerLoginActivity extends AppCompatActivity {
                     });
         });
     }
+
     @Override
-    protected void onStart(){
+    protected void onStart() {
         super.onStart();
-       // mAuth.addAuthStateListener(firebaseAuthListener);
+        //mAuth.addAuthStateListener(firebaseAuthListener);
     }
+
     @Override
-    protected void onStop(){
+    protected void onStop() {
         super.onStop();
         mAuth.removeAuthStateListener(firebaseAuthListener);
     }

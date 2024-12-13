@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -28,6 +29,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.github.thuhen.beeapp.databinding.ActivityDriverMapBinding;
@@ -116,6 +119,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         });
 
     }
+
     private void getAssignedCustomerPickupLocation(){
         DatabaseReference assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerId).child("i");
         assignedCustomerPickupLocationRef.addValueEventListener(new ValueEventListener() {
@@ -169,6 +173,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
         });
     }
+
     private void checkLocationPermission() {
         Log.d(TAG, "checkLocationPermission: Checking permissions");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -203,6 +208,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
     }
 
+    private boolean hasMovedCamera = false;
+    private Circle mUserLocationCircle;
     @SuppressLint("MissingPermission")
     private void getUserLocation() {
         Log.d(TAG, "getUserLocation: Starting location updates");
@@ -217,27 +224,65 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 Log.d(TAG, "onLocationResult: Received location update");
-                if (locationResult == null || mMap == null) {
-                    Log.e(TAG, "onLocationResult: LocationResult or GoogleMap is null");
-                    return;
-                }
-                for (Location location : locationResult.getLocations()) {
+
+                Location location = locationResult.getLastLocation();
+                if (location != null) {
                     Log.d(TAG, "onLocationResult: Location - Lat: " + location.getLatitude() + ", Lng: " + location.getLongitude());
                     LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                    mMap.clear(); // Xóa marker cũ
-                    mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15));
 
-                    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    // Chỉ di chuyển camera một lần khi lần đầu nhận được vị trí
+                    if (!hasMovedCamera) {
+                        // Xóa circle cũ nếu có (nếu đã có circle từ trước)
+                        if (mUserLocationCircle != null) {
+                            mUserLocationCircle.remove();
+                        }
+
+                        // Tạo một circle mới cho vị trí người dùng
+                        mUserLocationCircle = mMap.addCircle(new CircleOptions()
+                                .center(userLocation)  // Vị trí trung tâm của circle
+                                .radius(50)  // Bán kính của circle (đơn vị là mét)
+                                .fillColor(0x550000FF)  // Màu xanh da trời nhạt với độ trong suốt
+                                .strokeColor(0xFF0000FF)  // Màu xanh da trời đậm, không trong suốt
+                                .strokeWidth(1));  // Độ rộng viền của circle
+
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 18)); // Di chuyển camera đến vị trí mới
+                        hasMovedCamera = true; // Đánh dấu là đã di chuyển camera
+                    }
+
+                    // Cập nhật vị trí người dùng trong Firebase
+                    String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
                     DatabaseReference userLocationRef = FirebaseDatabase.getInstance().getReference("driverAvailable");
 
                     GeoFire geoFire = new GeoFire(userLocationRef);
                     geoFire.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
+
+                } else {
+                    Log.e(TAG, "onLocationResult: LocationResult is null");
+                    return;
                 }
             }
         };
 
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+// Bắt đầu yêu cầu cập nhật vị trí
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+    //fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+    }
+
+    private void stopLocationUpdates() {
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        hasMovedCamera = false; // Reset lại cờ khi Activity được mở lại
+        checkLocationPermission(); // Bắt đầu khi Activity được mở lại
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates(); // Dừng khi activity bị ẩn
     }
 
     @Override
@@ -247,7 +292,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         // nút + và - zoom
         mMap.getUiSettings().setZoomControlsEnabled(true);
 
-       // mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        // mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "onMapReady: Location permission granted, enabling My Location");
@@ -260,12 +305,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     protected void onStop() {
         super.onStop();
-
         Log.d(TAG, "onStop: Removing location updates");
-
-        // Xóa cập nhật vị trí từ FusedLocationProviderClient
-        if (locationCallback != null) {
-            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+        if (fusedLocationProviderClient != null && locationCallback != null) {
+            stopLocationUpdates();
         }
 
         // Xóa vị trí của người dùng khỏi Firebase
@@ -281,5 +323,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
         });
     }
+
 
 }

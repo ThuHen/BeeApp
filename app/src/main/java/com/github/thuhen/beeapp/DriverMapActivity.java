@@ -46,6 +46,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     private GoogleMap mMap;
     private ActivityDriverMapBinding binding;
+
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private Button mLogout;
@@ -61,7 +62,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         binding = ActivityDriverMapBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        Log.d(TAG, "onCreate: Activity started");
+        Log.d(TAG, "onCreate: DriverMapActivity started");
 
         // Load map fragment
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -206,7 +207,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private void getUserLocation() {
         Log.d(TAG, "getUserLocation: Starting location updates");
 
-        LocationRequest locationRequest = new LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 5000) // 5 giây
+        LocationRequest locationRequest = new LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 8000) // 8 giây
                 .setWaitForAccurateLocation(false)
                 .setMinUpdateIntervalMillis(10000) // 10 giây
                 .setMaxUpdateDelayMillis(10000) // 10 giây

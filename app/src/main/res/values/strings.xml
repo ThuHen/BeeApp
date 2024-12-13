@@ -15,5 +15,8 @@
     <string name="location_permission_accepted">Permission Accepted</string>
     <string name="location_permission_denied">Permission Rejected</string>
     <string name="location_not_found">location is null</string>
+    <string name="call_bee">Call Bee</string>
+    <string name="log_out">Log Out</string>
+    <string name="title_activity_vidu">vidu</string>
 
 </resources>

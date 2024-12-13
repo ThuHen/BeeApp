@@ -3,7 +3,6 @@ package com.github.thuhen.beeapp;
 import static com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -24,14 +23,12 @@ import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.github.thuhen.beeapp.databinding.ActivityCustomerMapBinding;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -39,7 +36,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.github.thuhen.beeapp.databinding.ActivityDriverMapBinding;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -50,28 +47,32 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class CustomerMapActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private ActivityDriverMapBinding binding;
-    LocationRequest mLocationRequest;
+    private ActivityCustomerMapBinding binding;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
-    private Location mLastLocation;
-    private Button mLogout, mRequest;
+    private Button mLogout;
+    private Button mRequest;
     private LatLng pickupLocation;
+    private String customerId = "";
+    private LocationRequest mLocationRequest;
     private Button mCallDriver;
 
+
     private static final int LOCATION_REQUEST_CODE = 100;
-    private static final String TAG = "DriverMapActivity"; // Tag dùng trong Logcat
+    private static final String TAG = "CustomerMapActivity"; // Tag dùng trong Logcat
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_customer_map);
-        //binding = ActivityDriverMapBinding.inflate(getLayoutInflater());
-        //setContentView(binding.getRoot());
+
+        binding = ActivityCustomerMapBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         Log.d(TAG, "onCreate: Activity started");
 
@@ -90,8 +91,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         checkLocationPermission();
 
         mLogout = (Button) findViewById(R.id.logout);
-        mRequest = (Button) findViewById(R.id.request);
-
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -103,13 +102,28 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
             }
         });
+        mRequest = findViewById(R.id.button_call_request);
         mRequest.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("MissingPermission")
             @Override
             public void onClick(View view) {
                 if (mRequest == null) {
                     Log.e("Error", "mRequest không được ánh xạ chính xác!");
                     return;
                 }
+
+                fusedLocationProviderClient.getLastLocation()
+                        .addOnSuccessListener(CustomerMapActivity.this, new OnSuccessListener<Location>() {
+                            @Override
+                            public void onSuccess(Location location) {
+                                String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                                DatabaseReference userLocationRef = FirebaseDatabase.getInstance().getReference("customerRequest");
+
+                                GeoFire geoFire = new GeoFire(userLocationRef);
+                                geoFire.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
+                            }
+                        });
+
                 Snackbar snackbar = Snackbar.make(view, "Getting your driver...", Snackbar.LENGTH_INDEFINITE);
                 snackbar.show();
                 Handler handler = new Handler();
@@ -123,27 +137,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 }
 
                 getClosestDriver();
-            }
 
+            }
         });
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
-                    return;
-                }
-                for (Location location : locationResult.getLocations()) {
-                    // Xử lý vị trí mới tại đây
-                    double latitude = location.getLatitude();
-                    double longitude = location.getLongitude();
-                    Log.d("Location", "Lat: " + latitude + ", Lng: " + longitude);
-
-                    // Hiển thị trên bản đồ nếu cần
-                    LatLng userLatLng = new LatLng(latitude, longitude);
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 15));
-                }
-            }
-        };
 
     }
 
@@ -249,25 +245,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     Log.w(TAG, "onDataChange: Snapshot does not exist");
                 }
 
-//                    if (snapshot.exists()) {
-//                        List<Object> map = (List<Object>) snapshot.getValue();
-//                        double locationLat = 0;
-//                        double locationLng = 0;
-//                        mRequest.setText("Driver Found");
-//                        if (map.get(0) != null) {
-//                            locationLat = Double.parseDouble(map.get(0).toString());
-//                        }
-//                        if (map.get(0) != null) {
-//                            locationLng = Double.parseDouble(map.get(0).toString());
-//                        }
-//                        LatLng driverLatLng = new LatLng(locationLat, locationLng);
-//                        if (mDriverMarker != null) {
-//                            mDriverMarker.remove();
-//                        }
-//                        mDriverMarker = mMap.addMarker(new MarkerOptions().position(driverLatLng).title("your driver"));
-//                          }
-//                    }
-                }
+
+            }
 
             @Override
             public void onCancelled (@NonNull DatabaseError error){
@@ -294,7 +273,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
                 android.Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_REQUEST_CODE);
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -308,28 +286,35 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 Toast.makeText(this, R.string.location_permission_denied, Toast.LENGTH_SHORT).show();
             }
         }
+//        locationCallback = new LocationCallback() {
+//            @Override
+//            public void onLocationResult(LocationResult locationResult) {
+//                if (locationResult == null) {
+//                    return;
+//                }
+//                for (Location location : locationResult.getLocations()) {
+//                    // Xử lý vị trí mới tại đây
+//                    double latitude = location.getLatitude();
+//                    double longitude = location.getLongitude();
+//                    Log.d("Location", "Lat: " + latitude + ", Lng: " + longitude);
+//
+//                    // Hiển thị trên bản đồ nếu cần
+//                    LatLng userLatLng = new LatLng(latitude, longitude);
+//                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 15));
+//                }
+//            }
+//        };
     }
 
-    private void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Yêu cầu quyền nếu chưa được cấp
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
-            return;
-        }
 
-        fusedLocationProviderClient.requestLocationUpdates(mLocationRequest, locationCallback, Looper.getMainLooper());
-    }
 
-    private void stopLocationUpdates() {
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-    }
+
 
     @SuppressLint("MissingPermission")
     private void getUserLocation() {
         Log.d(TAG, "getUserLocation: Starting location updates");
 
-        LocationRequest locationRequest = new LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 5000) // 5 giây
+        LocationRequest locationRequest = new LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 8000) // 8 giây
                 .setWaitForAccurateLocation(false)
                 .setMinUpdateIntervalMillis(10000) // 10 giây
                 .setMaxUpdateDelayMillis(10000) // 10 giây
@@ -355,10 +340,25 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
     }
+    private void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Yêu cầu quyền nếu chưa được cấp
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+            return;
+        }
+
+        fusedLocationProviderClient.requestLocationUpdates(mLocationRequest, locationCallback, Looper.getMainLooper());
+    }
+
+    private void stopLocationUpdates() {
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+    }
     // 7. Xử lý vòng đời activity
     @Override
     protected void onResume() {
         super.onResume();
+
         startLocationUpdates(); // Bắt đầu khi activity hiển thị
     }
 
@@ -389,7 +389,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     protected void onStop() {
         super.onStop();
         if (fusedLocationProviderClient != null && locationCallback != null) {
-            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+            stopLocationUpdates();
         }
     }
 //    @Override
@@ -441,3 +441,4 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 //    }
 
 }
+

@@ -140,7 +140,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 }, 3000);
 
 
-                getClosestDriver();
+                //getClosestDriver();
 
             }
         });

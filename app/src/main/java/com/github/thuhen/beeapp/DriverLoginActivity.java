@@ -58,13 +58,14 @@ public class DriverLoginActivity extends AppCompatActivity {
                     Intent intent = new Intent(DriverLoginActivity.this,DriverMapActivity.class);
                     startActivity(intent);
                     finish();
-                    //return;
+                    return; //neu da dang nhap thi khong hien thi man hinh login
                 }
             }
 
         };
 
         mRegistration.setOnClickListener(v -> {
+            mAuth.removeAuthStateListener(firebaseAuthListener);
             final String email = editTextMail.getText().toString();
             final String password = editTextPassword.getText().toString();
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener
@@ -109,7 +110,7 @@ public class DriverLoginActivity extends AppCompatActivity {
     @Override
     protected void onStart(){
         super.onStart();
-        //mAuth.addAuthStateListener(firebaseAuthListener);
+        mAuth.addAuthStateListener(firebaseAuthListener);
     }
     @Override
     protected void onStop(){

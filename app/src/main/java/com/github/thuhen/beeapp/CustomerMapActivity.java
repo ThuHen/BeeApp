@@ -47,6 +47,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,7 +140,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     Toast.makeText(CustomerMapActivity.this, "Task completed!", Toast.LENGTH_SHORT).show();
                 }, 3000);
 
-
+                saveCustomerRequest();
                 getClosestDriver();
 
             }
@@ -151,6 +152,11 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Boolean driverFound = false;
     private String driverFoundID;
     private void getClosestDriver() {
+        if (pickupLocation == null) {
+            Log.e(TAG, "getClosestDriver: Pickup location is null. Cannot search for drivers.");
+            Toast.makeText(this, "Pickup location is not set. Please select a location.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         DatabaseReference driverLocation = FirebaseDatabase.getInstance().getReference().child("driverAvailable");
         GeoFire geofire = new GeoFire(driverLocation);
         //lỗi: pickupLocation bị null
@@ -170,6 +176,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     driverRef.updateChildren(map);
                     getDriverLocation();
                     mRequest.setText(R.string.looking_for_driver_location);
+                    // Gọi notifyDriverFound khi tìm thấy tài xế
                 }
             }
 
@@ -199,66 +206,119 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     }
 
     private Marker mDriverMarker;
+
     private void getDriverLocation() {
-        DatabaseReference driverLocationRef = FirebaseDatabase.getInstance().getReference().child("driversWorking").child(driverFoundID).child("i");
+        if (driverFoundID == null || driverFoundID.isEmpty()) {
+            Log.e(TAG, "getDriverLocation: Driver ID is null or empty");
+            return;
+        }
+
+        DatabaseReference driverLocationRef = FirebaseDatabase.getInstance()
+                .getReference("driverAvailable").child(driverFoundID).child("l");
+
         driverLocationRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    Object value = snapshot.getValue();
-                    if (value instanceof List) {
-                        List<Object> map = (List<Object>) value;
+                if (snapshot.exists() && snapshot.getValue() != null) {
+                    List<Object> map = (List<Object>) snapshot.getValue();
+                    if (map != null && map.size() >= 2) {
+                        try {
+                            double driverLat = Double.parseDouble(map.get(0).toString());
+                            double driverLng = Double.parseDouble(map.get(1).toString());
+                            LatLng driverLatLng = new LatLng(driverLat, driverLng);
+                            updateDriverMarker(driverLat, driverLng);
 
-                        double locationLat = 0.0;
-                        double locationLng = 0.0;
-
-                        // Kiểm tra và lấy giá trị latitude
-                        if (!map.isEmpty() && map.get(0) != null) {
-                            try {
-                                locationLat = Double.parseDouble(map.get(0).toString());
-                            } catch (NumberFormatException e) {
-                                Log.e(TAG, "onDataChange: Invalid latitude format", e);
+                            if (pickupLocation != null) {
+                                calculateDistance(pickupLocation, driverLatLng);
                             }
-                        }
-
-                        // Kiểm tra và lấy giá trị longitude
-                        if (map.size() > 1 && map.get(1) != null) {
-                            try {
-                                locationLng = Double.parseDouble(map.get(1).toString());
-                            } catch (NumberFormatException e) {
-                                Log.e(TAG, "onDataChange: Invalid longitude format", e);
-                            }
-                        }
-
-                        // Nếu cả hai giá trị hợp lệ, cập nhật Marker
-                        if (locationLat != 0.0 && locationLng != 0.0) {
-                            LatLng driverLatLng = new LatLng(locationLat, locationLng);
-
-                            if (mDriverMarker != null) {
-                                mDriverMarker.remove();
-                            }
-
-                            mDriverMarker = mMap.addMarker(new MarkerOptions()
-                                    .position(driverLatLng)
-                                    .title("Your Driver"));
-                            mRequest.setText(R.string.driver_found);
+                        } catch (NumberFormatException | NullPointerException e) {
+                            Log.e(TAG, "Invalid driver location data", e);
                         }
                     } else {
-                        Log.e(TAG, "onDataChange: Data snapshot is not a List");
+                        Log.w(TAG, "onDataChange: Driver location data is invalid");
                     }
                 } else {
-                    Log.w(TAG, "onDataChange: Snapshot does not exist");
+                    Log.w(TAG, "onDataChange: No driver location found");
                 }
-
-
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                Log.e(TAG, "onCancelled: Error fetching driver location", error.toException());
             }
         });
     }
+
+    private void updateDriverMarker(double driverLat, double driverLng) {
+        LatLng driverLatLng = new LatLng(driverLat, driverLng);
+
+        // Xóa marker cũ nếu có
+        if (mDriverMarker != null) {
+            mDriverMarker.remove();
+        }
+
+        // Thêm marker mới cho vị trí tài xế
+        mDriverMarker = mMap.addMarker(new MarkerOptions()
+                .position(driverLatLng)
+                .title("Driver Location"));
+
+        // Nếu vị trí đón đã được chọn, tính khoảng cách giữa tài xế và khách hàng
+        if (pickupLocation != null) {
+            Location pickupLoc = new Location("");
+            pickupLoc.setLatitude(pickupLocation.latitude);
+            pickupLoc.setLongitude(pickupLocation.longitude);
+
+            Location driverLoc = new Location("");
+            driverLoc.setLatitude(driverLat);
+            driverLoc.setLongitude(driverLng);
+
+            float distance = pickupLoc.distanceTo(driverLoc) / 1000; // Đổi sang km
+            mRequest.setText(String.format("Driver is %.2f km away", distance));
+        }
+    }
+
+    private void saveCustomerRequest() {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference customerRequestRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(userId);
+
+        HashMap<String, Object> requestMap = new HashMap<>();
+        requestMap.put("i", Arrays.asList(pickupLocation.latitude, pickupLocation.longitude));
+        customerRequestRef.updateChildren(requestMap);
+
+        Log.d(TAG, "saveCustomerRequest: Customer request saved with location: " + pickupLocation.latitude + ", " + pickupLocation.longitude);
+    }
+
+    private void calculateDistance(LatLng customerLatLng, LatLng driverLatLng) {
+        if (customerLatLng == null || driverLatLng == null) {
+            Log.e(TAG, "calculateDistance: One of the locations is null");
+            return;
+        }
+
+        // Tạo đối tượng Location cho Customer
+        Location customerLocation = new Location("");
+        customerLocation.setLatitude(customerLatLng.latitude);
+        customerLocation.setLongitude(customerLatLng.longitude);
+
+        // Tạo đối tượng Location cho Driver
+        Location driverLocation = new Location("");
+        driverLocation.setLatitude(driverLatLng.latitude);
+        driverLocation.setLongitude(driverLatLng.longitude);
+
+        // Tính khoảng cách (mét)
+        float distanceInMeters = customerLocation.distanceTo(driverLocation);
+
+        // Chuyển đổi sang km
+        float distanceInKm = distanceInMeters / 1000;
+
+        Log.d(TAG, "Distance between Customer and Driver: " + distanceInKm + " km");
+
+        // Hiển thị khoảng cách
+        Toast.makeText(this, String.format("Driver is %.2f km away", distanceInKm), Toast.LENGTH_SHORT).show();
+
+        // Cập nhật TextView hoặc Button
+        mRequest.setText(String.format("Driver is %.2f km away", distanceInKm));
+    }
+
 
     private void checkLocationPermission() {
         Log.d(TAG, "checkLocationPermission: Checking permissions");
@@ -399,6 +459,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         } else {
             Log.w(TAG, "onMapReady: Location permission not granted");
         }
+        mMap.setOnMapClickListener(latLng -> {
+            pickupLocation = latLng;
+            mMap.clear();
+            mMap.addMarker(new MarkerOptions().position(pickupLocation).title("Pickup Location"));
+            Toast.makeText(this, "Pickup location set!", Toast.LENGTH_SHORT).show();
+
+            saveCustomerRequest();
+        });
     }
 
     @Override

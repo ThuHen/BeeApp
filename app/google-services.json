@@ -1,14 +1,14 @@
 {
   "project_info": {
-    "project_number": "542124931619",
-    "firebase_url": "https://beeapp-2024-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "project_id": "beeapp-2024",
-    "storage_bucket": "beeapp-2024.firebasestorage.app"
+    "project_number": "1035369113649",
+    "firebase_url": "https://bee-delivery-90f88-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "bee-delivery-90f88",
+    "storage_bucket": "bee-delivery-90f88.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:542124931619:android:aad90c8c1ab953bfd18f96",
+        "mobilesdk_app_id": "1:1035369113649:android:19a662d7cf3f894809cd10",
         "android_client_info": {
           "package_name": "com.github.thuhen.beeapp"
         }
@@ -16,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA5CdK6lFMlvTxJQzsvPn6BRjMKG9O8fks"
+          "current_key": "AIzaSyBDzfg7yNBZ9QAtn8uGzaUfFJb1mf43KG8"
         }
       ],
       "services": {

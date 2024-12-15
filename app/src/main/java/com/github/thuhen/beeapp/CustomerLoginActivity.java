@@ -46,7 +46,6 @@ public class CustomerLoginActivity extends AppCompatActivity {
         editTextPassword = findViewById(R.id.txt_password);
         mLogin = findViewById(R.id.btn_login);
         mRegistration = findViewById(R.id.btn_registration);
-
         mAuth = FirebaseAuth.getInstance();
 ///auto signin
         firebaseAuthListener = firebaseAuth -> {
@@ -55,11 +54,12 @@ public class CustomerLoginActivity extends AppCompatActivity {
                 Intent intent = new Intent(CustomerLoginActivity.this, CustomerMapActivity.class);
                 startActivity(intent);
                 finish();
-                //return;
+                return;
             }
         };
 
         mRegistration.setOnClickListener(v -> {
+            mAuth.removeAuthStateListener(firebaseAuthListener);
             final String email = editTextMail.getText().toString();
             final String password = editTextPassword.getText().toString();
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener

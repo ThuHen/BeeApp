@@ -27,11 +27,12 @@ import com.google.firebase.database.FirebaseDatabaseKtxRegistrar;
 import java.util.Objects;
 
 public class DriverLoginActivity extends AppCompatActivity {
-    private EditText editTextMail , editTextPassword;
+    private EditText editTextMail, editTextPassword;
     private Button mLogin, mRegistration;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener firebaseAuthListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,12 +51,12 @@ public class DriverLoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 ///dang nhap tu dong
-        firebaseAuthListener= new FirebaseAuth.AuthStateListener() {
+        firebaseAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if(user!=null){
-                    Intent intent = new Intent(DriverLoginActivity.this,DriverMapActivity.class);
+                if (user != null) {
+                    Intent intent = new Intent(DriverLoginActivity.this, DriverMapActivity.class);
                     startActivity(intent);
                     finish();
                     //return;
@@ -106,13 +107,15 @@ public class DriverLoginActivity extends AppCompatActivity {
                     });
         });
     }
+
     @Override
-    protected void onStart(){
+    protected void onStart() {
         super.onStart();
-        //mAuth.addAuthStateListener(firebaseAuthListener);
+        mAuth.addAuthStateListener(firebaseAuthListener);
     }
+
     @Override
-    protected void onStop(){
+    protected void onStop() {
         super.onStop();
         mAuth.removeAuthStateListener(firebaseAuthListener);
     }

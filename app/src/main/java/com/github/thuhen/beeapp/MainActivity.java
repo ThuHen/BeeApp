@@ -46,14 +46,14 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Driver button clicked"); // Log khi nút Driver được nhấn
                 Intent intent = new Intent(MainActivity.this, DriverLoginActivity.class);
                 startActivity(intent);
-                finish();
+                //finish();
             });
 
             mCustomer.setOnClickListener(view -> {
                 Log.d(TAG, "Customer button clicked"); // Log khi nút Customer được nhấn
                 Intent intent = new Intent(MainActivity.this, CustomerLoginActivity.class);
                 startActivity(intent);
-                finish();
+                //finish();
             });
         } else {
             Log.e(TAG, "Buttons not found! Check your layout file."); // Log lỗi nếu các nút không được tìm thấy

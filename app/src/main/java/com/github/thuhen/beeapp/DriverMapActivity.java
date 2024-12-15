@@ -97,86 +97,111 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             }
         });
-        //getAssignedCustomer();
+        getAssignedCustomer();
     }
 
 
     private void getAssignedCustomer() {
-        String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId);
+        // Lấy ID của tài xế này từ driverId
+        String driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        // Lấy thông tin tài xế này từ Firebase
+        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Drivers").child(driverId);
+        // Lắng nghe sự thay đổi của thông tin tài xế
         assignedCustomerRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
-                    if (map.get("customerRideId") != null) {
-                        customerId = map.get("customerRideId").toString();
-                        getAssignedCustomerPickupLocation();
-                    }
+                // Nếu tài xế đã được gán cho khách hàng, lấy ID của khách hàng
+                if (snapshot.exists() && snapshot.hasChild("customerRideId")) {
+                    // Lấy ID của khách hàng
+                    customerId = Objects.requireNonNull(snapshot.child("customerRideId").getValue()).toString();
+                    Log.d(TAG, "Assigned customer ID: " + customerId);
+                    // Lấy vị trí của khách hàng
+                    getAssignedCustomerPickupLocation();
+                } else {
+                    Log.w(TAG, "No assigned customer found");
+                    customerId = ""; // Reset customerId
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                Log.e(TAG, "Error fetching assigned customer: " + error.getMessage());
             }
         });
 
     }
 
     private void getAssignedCustomerPickupLocation() {
-        DatabaseReference assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerId).child("i");
+        if (customerId == null || customerId.isEmpty()) {
+            Log.e(TAG, "getAssignedCustomerPickupLocation: customerId is null or empty");
+            return;
+        }
+        //get data location customerrequest
+        DatabaseReference assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance()
+                .getReference("customerRequest").child(customerId).child("l");
+        // Lắng nghe sự thay đổi của vị trí khách hàng
         assignedCustomerPickupLocationRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    try {
-                        // Ép kiểu thành Map để trích xuất thông tin
-                        List<Object> map = (List<Object>) snapshot.getValue();
-                        if (map != null) {
-                            double locationLat = 0;
-                            double locationLng = 0;
-
-                            // Kiểm tra và lấy tọa độ
-                            if (map.get(0) != null) {
-                                locationLat = Double.parseDouble(map.get(0).toString());
-                            } else {
-                                Log.e(TAG, "onDataChange: Latitude is null");
-                            }
-
-                            if (map.get(1) != null) { // Chỉnh `map.get(1)` thay vì `map.get(0)` để lấy longitude
-                                locationLng = Double.parseDouble(map.get(1).toString());
-                            } else {
-                                Log.e(TAG, "onDataChange: Longitude is null");
-                            }
-
-                            // Tạo marker chỉ khi tọa độ hợp lệ
-                            if (locationLat != 0 && locationLng != 0) {
-                                LatLng driverLatLng = new LatLng(locationLat, locationLng);
-                                mMap.addMarker(new MarkerOptions()
-                                        .position(driverLatLng)
-                                        .title("Pickup Location"));
-                                Log.d(TAG, "onDataChange: Added marker at Lat: " + locationLat + ", Lng: " + locationLng);
-                            } else {
-                                Log.w(TAG, "onDataChange: Invalid location coordinates");
-                            }
-                        } else {
-                            Log.e(TAG, "onDataChange: Data map is null");
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "onDataChange: Error parsing location data", e);
+                if (!snapshot.exists()) {
+                    Log.w(TAG, "onDataChange: No pickup location found for customerId: " + customerId);
+                    return;
+                }
+                try {
+                    List<Object> locationData = (List<Object>) snapshot.getValue();
+                    if (locationData == null || locationData.size() < 2) {
+                        Log.e(TAG, "onDataChange: Invalid location data");
+                        return;
                     }
-                } else {
-                    Log.w(TAG, "onDataChange: Snapshot does not exist");
+                    // get longtitue, latitue
+                    double locationLat = Double.parseDouble(locationData.get(0).toString());
+                    double locationLng = Double.parseDouble(locationData.get(1).toString());
+                    LatLng customerLatLng = new LatLng(locationLat, locationLng);
+                    // Add marker to map
+                    mMap.addMarker(new MarkerOptions()
+                            .position(customerLatLng)
+                            .title("Customer Pickup Location"));
+                    // Move and zoom camera to customer location
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(customerLatLng, 15));
+                    Log.d(TAG, "Customer Pickup Location: Lat=" + locationLat + ", Lng=" + locationLng);
+
+
+                    // Tính khoảng cách nếu tọa độ Driver có sẵn
+                    ///getDriverLocation(locationLat, locationLng);
+
+
+                } catch (Exception e) {
+                    Log.e(TAG, "onDataChange: Error parsing location data", e);
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                Log.e(TAG, "onCancelled: Failed to retrieve pickup location", error.toException());
             }
         });
     }
+
+//    private void calculateDistance(LatLng driverLatLng, LatLng customerLatLng) {
+//        if (driverLatLng == null || customerLatLng == null) {
+//            Log.e(TAG, "calculateDistance: One of the locations is null");
+//            return;
+//        }
+//        Location driverLocation = new Location("");
+//        driverLocation.setLatitude(driverLatLng.latitude);
+//        driverLocation.setLongitude(driverLatLng.longitude);
+//        Location customerLocation = new Location("");
+//        customerLocation.setLatitude(customerLatLng.latitude);
+//        customerLocation.setLongitude(customerLatLng.longitude);
+//        // Tính khoảng cách (mét)
+//        float distanceInMeters = driverLocation.distanceTo(customerLocation);
+//        // Chuyển đổi sang km
+//        float distanceInKm = distanceInMeters / 1000;
+//        Log.d(TAG, "Distance between Driver and Customer: " + distanceInKm + " km");
+//        // Hiển thị thông báo
+//        Toast.makeText(this, String.format("Customer is %.2f km away", distanceInKm), Toast.LENGTH_SHORT).show();
+//    }
 
     private Boolean checkLocationPermission() {
         Log.d(TAG, "checkLocationPermission: Checking permissions");
@@ -214,6 +239,33 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
     }
 
+//    @SuppressLint("MissingPermission")
+//    private void getDriverLocation(double customerLat, double customerLng) {
+//        LatLng customerLatLng = new LatLng(customerLat, customerLng);
+//        LocationRequest locationRequest = new LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 8000)
+//                .setWaitForAccurateLocation(false)
+//                .setMinUpdateIntervalMillis(10000)
+//                .setMaxUpdateDelayMillis(10000)
+//                .build();
+//        locationCallback = new LocationCallback() {
+//            @Override
+//            public void onLocationResult(@NonNull LocationResult locationResult) {
+//                Location location = locationResult.getLastLocation();
+//                if (location != null) {
+//                    LatLng driverLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+//                    Log.d(TAG, "Driver Location: Lat=" + driverLatLng.latitude + ", Lng=" + driverLatLng.longitude);
+//                    // Tính khoảng cách đến Customer
+//                    calculateDistance(driverLatLng, customerLatLng);
+//                    // Hiển thị vị trí Driver trên bản đồ
+//                    mMap.addMarker(new MarkerOptions()
+//                            .position(driverLatLng)
+//                            .title("Driver Location"));
+//                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(driverLatLng, 15));
+//                }
+//            }
+//        };
+//        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+//    }
 
     private boolean hasMovedCamera = false;
 

@@ -60,9 +60,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
-
+    private LatLng userLocation;
     private Button mRequest;
-    private LatLng pickupLocation;//vi tri đón khách
+    //vi tri đón khách
+    private LatLng pickupLocation;
     private String customerId = "";
     private Button mCallDriver;
 
@@ -143,15 +144,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                             }
                         });
 
-//                Snackbar snackbar = Snackbar.make(view, "Getting your driver...", Snackbar.LENGTH_INDEFINITE);
-//                snackbar.show();
-//                Handler handler = new Handler();
-//                handler.postDelayed(() -> {
-//                    // Code sẽ chạy sau 3 giây
-//                    Toast.makeText(CustomerMapActivity.this, "Task completed!", Toast.LENGTH_SHORT).show();
-//                }, 3000);
-
-
             }
         });
 
@@ -162,12 +154,12 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private String driverFoundID;
 
     private void getClosestDriver() {
-        // Tìm tài xế đang rảnh
+        // Vào khu firebase các tài xế đang rảnh
         DatabaseReference driverLocation = FirebaseDatabase.getInstance().getReference()
                 .child("driverAvailable");
-
+        // Tạo đối tượng GeoFire để truy vấn vị trí tài xế
         GeoFire geofire = new GeoFire(driverLocation);
-
+        // Truy vấn vị trí tài xế gần nhất
         GeoQuery geoQuery = geofire.queryAtLocation
                 (new GeoLocation(pickupLocation.latitude, pickupLocation.longitude), radius);
         // Xóa tất cả listener cũ
@@ -179,6 +171,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 if (!driverFound) {
                     driverFound = true;
                     driverFoundID = key;
+                    Log.e(TAG, "getClosestDriver: Driver ID is " + key);
                     //vào firebase tài xế gần nhất
                     DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
                             .child("Users").child("Drivers").child(driverFoundID);
@@ -225,10 +218,15 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
     private void getDriverLocation() {
         if (driverFoundID == null || driverFoundID.isEmpty()) {
+            Toast.makeText(this, String.format("getDriverLocation: Driver ID is null or empty"), Toast.LENGTH_SHORT).show();
+
             Log.e(TAG, "getDriverLocation: Driver ID is null or empty");
+            mRequest.setText(R.string.call_bee);
+
             return;
         }
-        // Lấy vị trí tài xế được ghép
+
+        // vào khu driverWorking
         DatabaseReference driverLocationRef = FirebaseDatabase.getInstance().getReference()
                 .child("driversWorking").child(driverFoundID).child("l");
         // Lắng nghe sự thay đổi của vị trí tài xế
@@ -248,9 +246,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                             // Hiển thị vị trí tài xế trên bản đồ
                             updateDriverMarker(driverLat, driverLng);
                             if (pickupLocation != null) {
-                                //
-                                //calculateDistance(pickupLocation, driverLatLng);
-                                //
+                                // Tính khoảng cách
+                                calculateDistance(pickupLocation, driverLatLng);
+
                             }
                         } catch (NumberFormatException | NullPointerException e) {
                             Log.e(TAG, "Invalid driver location data", e);
@@ -282,6 +280,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         mDriverMarker = mMap.addMarker(new MarkerOptions()
                 .position(driverLatLng)
                 .title("Driver Location"));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pickupLocation, 15));
     }
 
     //luư tọa độ điểm đón của khách
@@ -304,29 +303,28 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
     }
 
-//    private void calculateDistance(LatLng customerLatLng, LatLng driverLatLng) {
-//        if (customerLatLng == null || driverLatLng == null) {
-//            Log.e(TAG, "calculateDistance: One of the locations is null");
-//            return;
-//        }
-//        // Tạo đối tượng Location cho Customer
-//        Location customerLocation = new Location("");
-//        customerLocation.setLatitude(customerLatLng.latitude);
-//        customerLocation.setLongitude(customerLatLng.longitude);
-//        // Tạo đối tượng Location cho Driver
-//        Location driverLocation = new Location("");
-//        driverLocation.setLatitude(driverLatLng.latitude);
-//        driverLocation.setLongitude(driverLatLng.longitude);
-//        // Tính khoảng cách (mét)
-//        float distanceInMeters = customerLocation.distanceTo(driverLocation);
-//        // Chuyển đổi sang km
-//        float distanceInKm = distanceInMeters / 1000;
-//        Log.d(TAG, "Distance between Customer and Driver: " + distanceInKm + " km");
-//        // Hiển thị khoảng cách
-//        Toast.makeText(this, String.format("Driver is %.2f km away", distanceInKm), Toast.LENGTH_SHORT).show();
-//        // Cập nhật TextView hoặc Button
-//        mRequest.setText(String.format("Driver is %.2f km away", distanceInKm));
-//    }
+    private void calculateDistance(LatLng customerLatLng, LatLng driverLatLng) {
+        if (customerLatLng == null || driverLatLng == null) {
+            Log.e(TAG, "calculateDistance: One of the locations is null");
+            return;
+        }
+        // Tạo đối tượng Location cho Customer
+        Location customerLocation = new Location("");
+        customerLocation.setLatitude(customerLatLng.latitude);
+        customerLocation.setLongitude(customerLatLng.longitude);
+        // Tạo đối tượng Location cho Driver
+        Location driverLocation = new Location("");
+        driverLocation.setLatitude(driverLatLng.latitude);
+        driverLocation.setLongitude(driverLatLng.longitude);
+        // Tính khoảng cách (mét)
+        float distanceInMeters = customerLocation.distanceTo(driverLocation);
+        // Chuyển đổi sang km
+        float distanceInKm = distanceInMeters / 1000;
+        Log.d(TAG, "Distance between Customer and Driver: " + distanceInKm + " km");
+        // Hiển thị khoảng cách
+        // Cập nhật TextView hoặc Button
+        mRequest.setText(String.format("Driver is %.2f km away", distanceInKm));
+    }
 
     private Boolean checkLocationPermission() {
         Log.d(TAG, "checkLocationPermission: Checking permissions");
@@ -387,10 +385,11 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 for (Location location : locationResult.getLocations()) {
 
                     if (location != null) {
+
                         double latitude = location.getLatitude();
                         double longitude = location.getLongitude();
                         Log.d(TAG, "onLocationResult: Location - Lat: " + latitude + ", Lng: " + longitude);
-                        LatLng userLocation = new LatLng(latitude, longitude);
+                        userLocation = new LatLng(latitude, longitude);
 
                         if (!hasMovedCamera) {
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 20)); // Di chuyển camera đến vị trí mới
@@ -506,7 +505,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         super.onStop();
         Log.d(TAG, "onStop:");
         stopLocationUpdates();
-        //deleteLocationOnFirebase();
+        deleteLocationOnFirebase();
 
     }
 //    @Override

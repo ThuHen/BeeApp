@@ -59,7 +59,7 @@ public class CustomerLoginActivity extends AppCompatActivity {
         };
 
         mRegistration.setOnClickListener(v -> {
-            mAuth.removeAuthStateListener(firebaseAuthListener);
+
             final String email = editTextMail.getText().toString();
             final String password = editTextPassword.getText().toString();
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener

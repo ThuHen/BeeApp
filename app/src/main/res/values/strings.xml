@@ -19,7 +19,7 @@
     <string name="log_out">Log Out</string>
     <string name="title_activity_vidu">vidu</string>
     <string name="pickup_here">Pickup Here</string>
-    <string name="looking_for_driver_location">Looking for driver location...</string>
+    <string name="looking_for_driver_location">Đang tìm vị trí tài xế gần bạn . . . </string>
     <string name="driver_found">Driver Found</string>
 
 </resources>

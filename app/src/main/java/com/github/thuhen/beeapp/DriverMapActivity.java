@@ -12,7 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.Looper;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -29,8 +29,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.Circle;
-import com.google.android.gms.maps.model.CircleOptions;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.github.thuhen.beeapp.databinding.ActivityDriverMapBinding;
@@ -54,7 +53,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
     private String customerId = "";
-
+    private LatLng userLocation;
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "DriverMapActivity"; // Tag dùng trong Logcat
 
@@ -118,6 +117,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     Log.d(TAG, "Assigned customer ID: " + customerId);
                     // Lấy vị trí của khách hàng
                     getAssignedCustomerPickupLocation();
+                    //chuyển trang thái driver: available -> working
+                    changeDriverStatusToWorking();
                 } else {
                     Log.w(TAG, "No assigned customer found");
                     customerId = ""; // Reset customerId
@@ -132,24 +133,48 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     }
 
+    private void changeDriverStatusToWorking() {
+        // Lấy ID của tài xế này từ driverId
+        String driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        DatabaseReference driverRefAvailable = FirebaseDatabase.getInstance().getReference("driverAvailable");
+        DatabaseReference driverRefWorking = FirebaseDatabase.getInstance().getReference("driversWorking");
+        GeoFire geoFireAvailable = new GeoFire(driverRefAvailable);
+        GeoFire geoFireWorking = new GeoFire(driverRefWorking);
+        if (Objects.equals(customerId, "")) {
+            geoFireAvailable.removeLocation(driverId);
+            geoFireAvailable.setLocation(driverId, new GeoLocation(userLocation.latitude, userLocation.longitude));
+            Log.d(TAG, "saved location available driver");
+        } else {
+            geoFireAvailable.removeLocation(driverId);
+
+            geoFireWorking.setLocation(driverId, new GeoLocation(userLocation.latitude, userLocation.longitude));
+            Log.d(TAG, "saved location available driver");
+
+        }
+
+    }
+
     private void getAssignedCustomerPickupLocation() {
         if (customerId == null || customerId.isEmpty()) {
             Log.e(TAG, "getAssignedCustomerPickupLocation: customerId is null or empty");
             return;
         }
-        //get data location customerrequest
+        //get l: location customerrequest
         DatabaseReference assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance()
                 .getReference("customerRequest").child(customerId).child("l");
         // Lắng nghe sự thay đổi của vị trí khách hàng
         assignedCustomerPickupLocationRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // Nếu vị trí khách hàng không tồn tại, không làm gì cả
                 if (!snapshot.exists()) {
                     Log.w(TAG, "onDataChange: No pickup location found for customerId: " + customerId);
                     return;
                 }
                 try {
+                    // Lấy tọa độ vị trí khách hàng
                     List<Object> locationData = (List<Object>) snapshot.getValue();
+                    // Kiểm tra tọa độ có đủ 2 phần tử
                     if (locationData == null || locationData.size() < 2) {
                         Log.e(TAG, "onDataChange: Invalid location data");
                         return;
@@ -167,8 +192,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     Log.d(TAG, "Customer Pickup Location: Lat=" + locationLat + ", Lng=" + locationLng);
 
 
-                    // Tính khoảng cách nếu tọa độ Driver có sẵn
-                    ///getDriverLocation(locationLat, locationLng);
+                    // Tính khoảng cách
+                    calculateDistance(userLocation, customerLatLng);
 
 
                 } catch (Exception e) {
@@ -183,25 +208,26 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         });
     }
 
-//    private void calculateDistance(LatLng driverLatLng, LatLng customerLatLng) {
-//        if (driverLatLng == null || customerLatLng == null) {
-//            Log.e(TAG, "calculateDistance: One of the locations is null");
-//            return;
-//        }
-//        Location driverLocation = new Location("");
-//        driverLocation.setLatitude(driverLatLng.latitude);
-//        driverLocation.setLongitude(driverLatLng.longitude);
-//        Location customerLocation = new Location("");
-//        customerLocation.setLatitude(customerLatLng.latitude);
-//        customerLocation.setLongitude(customerLatLng.longitude);
-//        // Tính khoảng cách (mét)
-//        float distanceInMeters = driverLocation.distanceTo(customerLocation);
-//        // Chuyển đổi sang km
-//        float distanceInKm = distanceInMeters / 1000;
-//        Log.d(TAG, "Distance between Driver and Customer: " + distanceInKm + " km");
-//        // Hiển thị thông báo
-//        Toast.makeText(this, String.format("Customer is %.2f km away", distanceInKm), Toast.LENGTH_SHORT).show();
-//    }
+    private void calculateDistance(LatLng driverLatLng, LatLng customerLatLng) {
+        if (driverLatLng == null || customerLatLng == null) {
+            Log.e(TAG, "calculateDistance: One of the locations is null");
+            return;
+        }
+        Location driverLocation = new Location("");
+        driverLocation.setLatitude(driverLatLng.latitude);
+        driverLocation.setLongitude(driverLatLng.longitude);
+
+        Location customerLocation = new Location("");
+        customerLocation.setLatitude(customerLatLng.latitude);
+        customerLocation.setLongitude(customerLatLng.longitude);
+        // Tính khoảng cách (mét)
+        float distanceInMeters = driverLocation.distanceTo(customerLocation);
+        // Chuyển đổi sang km
+        float distanceInKm = distanceInMeters / 1000;
+        Log.d(TAG, "Distance between Driver and Customer: " + distanceInKm + " km");
+        // Hiển thị thông báo
+        Toast.makeText(this, String.format("Customer is %.2f km away", distanceInKm), Toast.LENGTH_SHORT).show();
+    }
 
     private Boolean checkLocationPermission() {
         Log.d(TAG, "checkLocationPermission: Checking permissions");
@@ -224,7 +250,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -291,7 +318,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         double latitude = location.getLatitude();
                         double longitude = location.getLongitude();
                         Log.d(TAG, "onLocationResult: Location - Lat: " + latitude + ", Lng: " + longitude);
-                        LatLng userLocation = new LatLng(latitude, longitude);
+                        userLocation = new LatLng(latitude, longitude);
 
                         if (!hasMovedCamera) {
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 20)); // Di chuyển camera đến vị trí mới
@@ -299,15 +326,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         }
 
                         // Cập nhật vị trí người dùng trong Firebase
-
                         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                         if (currentUser != null) {
-                            String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-                            DatabaseReference userLocationRef = FirebaseDatabase.getInstance().getReference("driverAvailable");
 
-                            GeoFire geoFire = new GeoFire(userLocationRef);
-                            geoFire.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
-                            Log.d(TAG, "saved location");
+                            changeDriverStatusToWorking();
 
                         } else {
                             Log.e(TAG, "onLocationResult: cant save location, user logOut");

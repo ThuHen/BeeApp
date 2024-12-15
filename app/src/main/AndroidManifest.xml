@@ -32,18 +32,18 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR_API_KEY" />
+            android:value="AIzaSyAFaAJ_j7LyuoGQK25zcPNd5x0YxtfmJdY" />
 
 
         <activity
             android:name=".DriverMapActivity"
             android:exported="true"
-            android:label="@string/title_activity_driver_map"/>
+            android:label="@string/title_activity_driver_map" />
 
         <activity
             android:name=".CustomerMapActivity"
             android:exported="true"
-            android:label="CustomerMapActivity"/>
+            android:label="CustomerMapActivity" />
 
         <activity
             android:name=".CustomerLoginActivity"

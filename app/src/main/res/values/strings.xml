@@ -20,6 +20,9 @@
     <string name="title_activity_vidu">vidu</string>
     <string name="pickup_here">Pickup Here</string>
     <string name="looking_for_driver_location">Đang tìm vị trí tài xế gần bạn . . . </string>
-    <string name="driver_found">Driver Found</string>
+    <string name="driver_found">The driver is %.2f km away </string>
+    <string name="driver_is_here">The driver is here</string>
+    <string name="no_driver_found">Không có tài xế nào gần bạn</string>
+
 
 </resources>

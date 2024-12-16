@@ -62,14 +62,16 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private LocationRequest locationRequest;
     private LatLng userLocation;
     private Button mRequest;
-    //vi tri đón khách
+    //vi tri đón khách nay
     private LatLng pickupLocation;
+    private Marker pickupMarker;
     private String customerId = "";
     private Button mCallDriver;
 
 
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "CustomerMapActivity"; // Tag dùng trong Logcat
+    private Boolean requestBol = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +99,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         getUserLocation();
 
         Button mLogout = (Button) findViewById(R.id.logout);
+        if (mLogout == null) {
+            Log.e("Error", "mLogout không được ánh xạ chính xác!");
+            return;
+        }
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -113,37 +119,68 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             }
         });
         mRequest = findViewById(R.id.button_call_request);
+        if (mRequest == null) {
+            Log.e("Error", "mRequest không được ánh xạ chính xác!");
+            return;
+        }
         mRequest.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("MissingPermission")
             @Override
             public void onClick(View view) {
-                if (mRequest == null) {
-                    Log.e("Error", "mRequest không được ánh xạ chính xác!");
-                    return;
-                }
-                fusedLocationProviderClient.getLastLocation()
-                        .addOnSuccessListener(CustomerMapActivity.this, new OnSuccessListener<Location>() {
-                            @Override
-                            public void onSuccess(Location location) {
-                                if (location == null) {
-                                    Log.e("Error", "location is null!");
-                                    return;
+                if (requestBol) {
+                    requestBol = false;
+                    geoQuery.removeAllListeners();
+                    //xóa driversWorking
+                    driverLocationRef.removeEventListener(driverLocationListener);
+                    //xóa kết nối giữa driver và customer
+                    if (driverFoundID != null) {
+                        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
+                                .child("Users").child("Drivers").child(driverFoundID);
+                        driverRef.setValue(true);
+                        Log.d(TAG, "mRequestonClick: driverRef.setValue(true)");
+                        driverFoundID = null;
+                    }
+                    //xóa customerRequest
+                    String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+                    DatabaseReference userLocationRef = FirebaseDatabase.getInstance().getReference("customerRequest");
+                    GeoFire geoFire = new GeoFire(userLocationRef);
+                    geoFire.removeLocation(userId);
+                    //set lại điều kiện timd tài xế
+                    driverFound = false;
+                    radius = 1;
+                    //xóa marker khách khỏi bản đồ
+                    if (pickupMarker != null)
+                        pickupMarker.remove();
+                    if (mDriverMarker != null)
+                        mDriverMarker.remove();
+                    mRequest.setText(R.string.call_bee);
+
+                } else {
+                    requestBol = true;
+                    fusedLocationProviderClient.getLastLocation()
+                            .addOnSuccessListener(CustomerMapActivity.this, new OnSuccessListener<Location>() {
+                                @Override
+                                public void onSuccess(Location location) {
+                                    if (location == null) {
+                                        Log.e("Error", "location is null!");
+                                        return;
+                                    }
+                                    String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+                                    DatabaseReference userLocationRef = FirebaseDatabase.getInstance().getReference("customerRequest");
+
+                                    GeoFire geoFire = new GeoFire(userLocationRef);
+                                    geoFire.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
+
+
+                                    Log.d(TAG, "saved location");
+                                    pickupLocation = new LatLng(location.getLatitude(), location.getLongitude());
+
+                                    pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLocation).title(getString(R.string.pickup_here)));
+
+                                    getClosestDriver();
                                 }
-                                String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-                                DatabaseReference userLocationRef = FirebaseDatabase.getInstance().getReference("customerRequest");
-
-                                GeoFire geoFire = new GeoFire(userLocationRef);
-                                geoFire.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
-
-
-                                Log.d(TAG, "saved location");
-                                pickupLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                                mMap.addMarker(new MarkerOptions().position(pickupLocation).title(getString(R.string.pickup_here)));
-
-                                getClosestDriver();
-                            }
-                        });
-
+                            });
+                }
             }
         });
 
@@ -152,6 +189,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private int radius = 1;
     private Boolean driverFound = false;
     private String driverFoundID;
+    private GeoQuery geoQuery;
 
     private void getClosestDriver() {
         // Vào khu firebase các tài xế đang rảnh
@@ -160,7 +198,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         // Tạo đối tượng GeoFire để truy vấn vị trí tài xế
         GeoFire geofire = new GeoFire(driverLocation);
         // Truy vấn vị trí tài xế gần nhất
-        GeoQuery geoQuery = geofire.queryAtLocation
+        geoQuery = geofire.queryAtLocation
                 (new GeoLocation(pickupLocation.latitude, pickupLocation.longitude), radius);
         // Xóa tất cả listener cũ
         geoQuery.removeAllListeners();
@@ -168,7 +206,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                if (!driverFound) {
+                if (!driverFound && requestBol) {
                     driverFound = true;
                     driverFoundID = key;
                     Log.e(TAG, "getClosestDriver: Driver ID is " + key);
@@ -201,9 +239,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             @Override
             public void onGeoQueryReady() {
                 if (!driverFound) {
-                    radius++;
-                    // Nếu không tìm thấy tài xế, tăng bán kính tìm kiếm
-                    getClosestDriver();
+                    if (radius <= 5) {
+                        radius++;
+                        // Nếu không tìm thấy tài xế, tăng bán kính tìm kiếm
+                        getClosestDriver();
+                    } else {
+                        Toast.makeText(CustomerMapActivity.this, R.string.no_driver_found, Toast.LENGTH_SHORT).show();
+                        radius = 1;
+                    }
                 }
             }
 
@@ -215,26 +258,26 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     }
 
     private Marker mDriverMarker;
+    private DatabaseReference driverLocationRef;
+    private ValueEventListener driverLocationListener;
 
     private void getDriverLocation() {
         if (driverFoundID == null || driverFoundID.isEmpty()) {
             Toast.makeText(this, String.format("getDriverLocation: Driver ID is null or empty"), Toast.LENGTH_SHORT).show();
-
             Log.e(TAG, "getDriverLocation: Driver ID is null or empty");
             mRequest.setText(R.string.call_bee);
-
             return;
         }
 
         // vào khu driverWorking
-        DatabaseReference driverLocationRef = FirebaseDatabase.getInstance().getReference()
+        driverLocationRef = FirebaseDatabase.getInstance().getReference()
                 .child("driversWorking").child(driverFoundID).child("l");
         // Lắng nghe sự thay đổi của vị trí tài xế
-        driverLocationRef.addValueEventListener(new ValueEventListener() {
+        driverLocationListener = driverLocationRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // Nếu tài xế đã được ghép, lấy tọa độ vị trí tài xế
-                if (snapshot.exists() && snapshot.getValue() != null) {
+                if (snapshot.exists() && snapshot.getValue() != null && requestBol) {
                     // Lấy tọa độ vị trí tài xế
                     List<Object> map = (List<Object>) snapshot.getValue();
                     // Kiểm tra tọa độ có đủ 2 phần tử
@@ -320,10 +363,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         float distanceInMeters = customerLocation.distanceTo(driverLocation);
         // Chuyển đổi sang km
         float distanceInKm = distanceInMeters / 1000;
+        if (distanceInKm < 0.01)
+            mRequest.setText("@string/driver_is_here");
+        else
+            mRequest.setText(String.format("@string/driver_found", distanceInKm));
         Log.d(TAG, "Distance between Customer and Driver: " + distanceInKm + " km");
         // Hiển thị khoảng cách
         // Cập nhật TextView hoặc Button
-        mRequest.setText(String.format("Driver is %.2f km away", distanceInKm));
+
     }
 
     private Boolean checkLocationPermission() {
@@ -345,7 +392,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_REQUEST_CODE);
     }
 
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -361,7 +407,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             }
         }
     }
-
 
     private Circle mUserLocationCircle;
     private boolean hasMovedCamera = false;
@@ -415,7 +460,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         Log.d(TAG, "stopLocationUpdates: Removing location updates");
     }
 
-
     @SuppressLint("MissingPermission")
     @Override
     protected void onResume() {
@@ -440,8 +484,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         super.onPause();
         Log.d(TAG, "onPause:");
         stopLocationUpdates();
-
-
     }
 
     @Override
@@ -506,55 +548,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         Log.d(TAG, "onStop:");
         stopLocationUpdates();
         deleteLocationOnFirebase();
-
     }
-//    @Override
-//    public void onConnected(@Nullable Bundle bundle) {
-//        mLocationRequest = new LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 100)
-//                .setWaitForAccurateLocation(false)
-//                .setMinUpdateIntervalMillis(2000)
-//                .setMaxUpdateDelayMillis(100)
-//                .build();
-//    }
-//
-//    @Override
-//    public void onConnectionSuspended(int i) {
-//
-//    }
-//
-//    @Override
-//    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-//
-//    }
-//
-//    @Override
-//    public void onLocationChanged(@NonNull Location location) {
-//        if(getApplicationContext() != null){
-//            mLastLocation = location;
-//
-//            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-//
-//            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-//            mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
-//
-//            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-//            DatabaseReference refAvailable = FirebaseDatabase.getInstance().getReference("driverAvailable");
-//            DatabaseReference refWorking = FirebaseDatabase.getInstance().getReference("driverWorking");
-//            GeoFire geoFireAvailable = new GeoFire(refAvailable);
-//            GeoFire geoFireWorking = new GeoFire(refWorking);
-//            switch (customerId){
-//                case "":
-//                    geoFireWorking.removeLocation(userId);
-//                    geoFireAvailable.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
-//                    break;
-//
-//
-//                default:
-//                    geoFireAvailable.removeLocation(userId);
-//                    geoFireWorking.setLocation(userId, new GeoLocation(location.getLatitude(), location.getLongitude()));
-//            }
-//        }
-//    }
-
 }
 

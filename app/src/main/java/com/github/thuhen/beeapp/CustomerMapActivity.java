@@ -33,6 +33,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -175,7 +176,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                                     Log.d(TAG, "saved location");
                                     pickupLocation = new LatLng(location.getLatitude(), location.getLongitude());
 
-                                    pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLocation).title(getString(R.string.pickup_here)));
+                                    pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLocation)
+                                            .title(getString(R.string.pickup_here))
+                                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_app_bee_customer)))
+                                    ;
 
                                     getClosestDriver();
                                 }
@@ -322,7 +326,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         // Thêm marker mới cho vị trí tài xế
         mDriverMarker = mMap.addMarker(new MarkerOptions()
                 .position(driverLatLng)
-                .title("Driver Location"));
+                .title("Driver Location")
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_app_bee_driver)));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pickupLocation, 15));
     }
 
@@ -366,7 +371,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         if (distanceInKm < 0.01)
             mRequest.setText("@string/driver_is_here");
         else
-            mRequest.setText(String.format("@string/driver_found", distanceInKm));
+            mRequest.setText(String.format("Driver Found: %.2f km away", distanceInKm));
         Log.d(TAG, "Distance between Customer and Driver: " + distanceInKm + " km");
         // Hiển thị khoảng cách
         // Cập nhật TextView hoặc Button

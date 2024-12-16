@@ -30,6 +30,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -171,7 +172,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         // Add marker to map
                         pickupMarker = mMap.addMarker(new MarkerOptions()
                                 .position(customerLatLng)
-                                .title("Customer Pickup Location"));
+                                .title("Customer Pickup Location")
+                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_app_bee_customer)));
                         // Move and zoom camera to customer location
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(customerLatLng, 15));
                         Log.d(TAG, "Customer Pickup Location: Lat=" + locationLat + ", Lng=" + locationLng);
@@ -294,7 +296,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
     }
     private void changeDriverStatusToWorking() {
-
+        if (userLocation==null)
+        {
+            Log.e(TAG, "changeDriverStatusToWorking: userLocation is null");
+            return;
+        }
         // Lấy ID của tài xế này từ driverId
         String driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         DatabaseReference driverRefAvailable = FirebaseDatabase.getInstance().getReference("driverAvailable");

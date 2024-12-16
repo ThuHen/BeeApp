@@ -63,6 +63,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private LocationRequest locationRequest;
     private LatLng userLocation;
     private Button mRequest;
+    private Button mLogout;
+    private Button mSetting;
     //vi tri đón khách nay
     private LatLng pickupLocation;
     private Marker pickupMarker;
@@ -99,7 +101,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             requestForPermissions();
         getUserLocation();
 
-        Button mLogout = (Button) findViewById(R.id.logout);
+        mLogout = (Button) findViewById(R.id.logout);
         if (mLogout == null) {
             Log.e("Error", "mLogout không được ánh xạ chính xác!");
             return;
@@ -119,6 +121,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
             }
         });
+
         mRequest = findViewById(R.id.button_call_request);
         if (mRequest == null) {
             Log.e("Error", "mRequest không được ánh xạ chính xác!");
@@ -187,6 +190,21 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 }
             }
         });
+
+        mSetting = (Button) findViewById(R.id.setting);
+        if (mSetting == null) {
+            Log.e("Error", "mSetting không được ánh xạ chính xác!");
+            return;
+        }
+        mSetting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(CustomerMapActivity.this, CustomerSettingActivity.class);
+                startActivity(intent);
+                return;
+            }
+        });
+
 
     }
 

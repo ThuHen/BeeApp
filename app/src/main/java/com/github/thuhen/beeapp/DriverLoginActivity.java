@@ -64,11 +64,22 @@ public class DriverLoginActivity extends AppCompatActivity {
             }
 
         };
-
+        if (mRegistration == null) {
+            Toast.makeText(this, "mRegistration không được ánh xạ chính xác!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (mLogin == null) {
+            Toast.makeText(this, "mLogin không được ánh xạ chính xác!", Toast.LENGTH_SHORT).show();
+            return;
+        }
         mRegistration.setOnClickListener(v -> {
 
             final String email = editTextMail.getText().toString();
             final String password = editTextPassword.getText().toString();
+            if (!isInputValid(email, password)) {
+                Toast.makeText(this, R.string.enter_infor, Toast.LENGTH_SHORT).show();
+                return;
+            }
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener
                     (DriverLoginActivity.this, task -> {
                         if (!task.isSuccessful()) {
@@ -90,6 +101,10 @@ public class DriverLoginActivity extends AppCompatActivity {
         mLogin.setOnClickListener(view -> {
             final String email = editTextMail.getText().toString();
             final String password = editTextPassword.getText().toString();
+            if (!isInputValid(email, password)) {
+                Toast.makeText(this, R.string.enter_infor, Toast.LENGTH_SHORT).show();
+                return;
+            }
             mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener
                     (DriverLoginActivity.this, new OnCompleteListener<AuthResult>() {
                         @Override
@@ -107,6 +122,21 @@ public class DriverLoginActivity extends AppCompatActivity {
                         }
                     });
         });
+    }
+
+    private Boolean isInputValid(String email, String password) {
+        boolean isValid = true;
+        if (email.isEmpty()) {
+            editTextMail.setError("");
+            // editTextMail.requestFocus();
+            isValid = false;
+        }
+        if (password.isEmpty()) {
+            editTextPassword.setError("");
+            //heditTextPassword.requestFocus();
+            isValid = false;
+        }
+        return isValid;
     }
 
     @Override

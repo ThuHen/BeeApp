@@ -25,8 +25,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.Objects;
 
 public class CustomerLoginActivity extends AppCompatActivity {
-    private EditText editTextMail, editTextPassword;
-    private Button mLogin, mRegistration;
+    private EditText editTextMail;
+    private EditText editTextPassword;
+    private Button mLogin;
+    private Button mRegistration;
+
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener firebaseAuthListener;
@@ -57,11 +60,23 @@ public class CustomerLoginActivity extends AppCompatActivity {
                 return;
             }
         };
+        if (mRegistration == null) {
+            Toast.makeText(this, "mRegistration không được ánh xạ chính xác!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (mLogin == null) {
+            Toast.makeText(this, "mLogin không được ánh xạ chính xác!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
 
         mRegistration.setOnClickListener(v -> {
-
             final String email = editTextMail.getText().toString();
             final String password = editTextPassword.getText().toString();
+            if (!isInputValid(email, password)) {
+                Toast.makeText(this, R.string.enter_infor, Toast.LENGTH_SHORT).show();
+                return;
+            }
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener
                     (CustomerLoginActivity.this, task -> {
                         if (!task.isSuccessful()) {
@@ -80,9 +95,15 @@ public class CustomerLoginActivity extends AppCompatActivity {
 
         });
 
+
         mLogin.setOnClickListener(view -> {
             final String email = editTextMail.getText().toString();
             final String password = editTextPassword.getText().toString();
+            if (!isInputValid(email, password)) {
+                Toast.makeText(this, R.string.enter_infor, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener
                     (CustomerLoginActivity.this, new OnCompleteListener<AuthResult>() {
                         @Override
@@ -100,6 +121,21 @@ public class CustomerLoginActivity extends AppCompatActivity {
                         }
                     });
         });
+    }
+
+    private Boolean isInputValid(String email, String password) {
+        boolean isValid = true;
+        if (email.isEmpty()) {
+            editTextMail.setError("");
+            // editTextMail.requestFocus();
+            isValid = false;
+        }
+        if (password.isEmpty()) {
+            editTextPassword.setError("");
+            //heditTextPassword.requestFocus();
+            isValid = false;
+        }
+        return isValid;
     }
 
     @Override

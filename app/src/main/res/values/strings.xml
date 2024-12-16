@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">BeeApp</string>
-    <string name="sign_up_error">Tài khoản đã tồn tại.</string>
+    <string name="sign_up_error">Đăng ký không thành công</string>
     <string name="sign_up_sucessful">Đăng ký thành công.</string>
     <string name="sign_in_error">Tài khoản hoặc mật khẩu sai.</string>
     <string name="sign_in_sucessful">Đăng nhập thành công.</string>
@@ -23,6 +23,15 @@
     <string name="driver_found">The driver is %.2f km away </string>
     <string name="driver_is_here">The driver is here</string>
     <string name="no_driver_found">Không có tài xế nào gần bạn</string>
+    <string name="setting_button">Setting</string>
+    <string name="name_setting">Name</string>
+    <string name="phone_setting">Phone</string>
+    <string name="confirm_setting">Confirm</string>
+    <string name="confirm_back">Back</string>
+    <string name="confirm_infor_successful">Đã lưu thông tin thành công</string>
+    <string name="enter_email">Vui lòng nhập tài khoản</string>
+    <string name="enter_password">Vui lòng nhập mật khẩu</string>
+    <string name="enter_infor">Hãy điền thông tin vào.</string>
 
 
 </resources>

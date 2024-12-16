@@ -18,7 +18,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BeeApp"
         tools:targetApi="31">
-
+        <activity
+            android:name=".CustomerSettingActivity"
+            android:exported="false" />
         <!--
              TODO: Before you run your application, you need a Google Maps API key.
 
@@ -34,17 +36,14 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAFaAJ_j7LyuoGQK25zcPNd5x0YxtfmJdY" />
 
-
         <activity
             android:name=".DriverMapActivity"
             android:exported="true"
             android:label="@string/title_activity_driver_map" />
-
         <activity
             android:name=".CustomerMapActivity"
             android:exported="true"
             android:label="CustomerMapActivity" />
-
         <activity
             android:name=".CustomerLoginActivity"
             android:exported="false" />

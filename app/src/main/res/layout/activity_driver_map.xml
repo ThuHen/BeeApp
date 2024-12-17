@@ -8,14 +8,54 @@
     tools:context=".DriverMapActivity">
 
     <Button
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
         android:id="@+id/logout"
-        android:text="Logout"/>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Logout" />
 
     <fragment
-        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:id="@+id/id_map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/customer_infor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:background="@android:color/white">
+
+        <ImageView
+            android:id="@+id/customer_profile_image"
+            android:layout_width="100sp"
+            android:layout_height="100sp"
+            android:padding="20sp"
+            android:src="@mipmap/icon_default_user" />
+
+        <LinearLayout
+            android:id="@+id/customer_profile_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="40sp">
+
+            <TextView
+                android:id="@+id/customer_name"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:paddingTop="10sp"
+                android:paddingBottom="10sp" />
+
+            <TextView
+                android:id="@+id/customer_phone"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:paddingTop="10sp"
+                android:paddingBottom="10sp" />
+
+        </LinearLayout>
+    </LinearLayout>
 </FrameLayout>

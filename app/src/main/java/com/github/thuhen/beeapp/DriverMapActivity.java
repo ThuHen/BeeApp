@@ -16,6 +16,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
@@ -58,7 +61,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private LatLng userLocation;
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "DriverMapActivity"; // Tag dùng trong Logcat
-
+    private Button mLogout;
+    private LinearLayout mCustomerInfor;
+    private ImageView customerProfileImage;
+    private TextView customerName;
+    private TextView customerPhone;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,8 +88,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         if (!checkLocationPermission())
             requestForPermissions();
         getUserLocation();
-
-        Button mLogout = (Button) findViewById(R.id.logout);
+        getAssignedCustomer();
+        mLogout = (Button) findViewById(R.id.logout);
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -98,45 +105,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             }
         });
-        getAssignedCustomer();
+        mCustomerInfor = findViewById(R.id.customer_infor);
+        customerProfileImage = findViewById(R.id.customer_profile_image);
+        customerName = findViewById(R.id.customer_name);
+        customerPhone = findViewById(R.id.customer_phone);
     }
-//    public interface FirebaseCallback {
-//        void onCheckResult(boolean hasCustomerRideId);
-//    }
-//
-//    private void checkCustomerRideId(String driverId, FirebaseCallback callback) {
-//        if (driverId == null || driverId.isEmpty()) {
-//            Log.e("CheckCustomerRideId", "Driver ID is null or empty");
-//            callback.onCheckResult(false); // Trả về false nếu driverId không hợp lệ
-//            return;
-//        }
-//
-//        // Tham chiếu tới nhánh Drivers
-//        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
-//                .child("Users").child("Drivers").child(driverId);
-//
-//        // Lắng nghe sự thay đổi trong nhánh Drivers
-//        assignedCustomerRef.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                // Kiểm tra xem nhánh snapshot có tồn tại và có chứa con là customerRideId
-//                if (snapshot.exists() && snapshot.hasChild("customerRideId")) {
-//                    callback.onCheckResult(true); // Trả về true nếu customerRideId tồn tại
-//                } else {
-//                    callback.onCheckResult(false); // Trả về false nếu không tồn tại
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//                Log.e("CheckCustomerRideId", "Database error: " + error.getMessage());
-//                callback.onCheckResult(false); // Trả về false nếu có lỗi
-//            }
-//        });
-//    }
-
-
-
 
     private Marker pickupMarker;
     private DatabaseReference assignedCustomerPickupLocationRef;
@@ -149,7 +122,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance()
                     .getReference("customerRequest").child(customerId).child("l");
             // Lắng nghe sự thay đổi của vị trí khách hàng
-            assignedCustomerPickupLocationListener = assignedCustomerPickupLocationRef.addValueEventListener(new ValueEventListener() {
+            assignedCustomerPickupLocationListener = assignedCustomerPickupLocationRef
+                    .addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     // Nếu vị trí khách hàng không tồn tại, không làm gì cả
@@ -217,10 +191,17 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     customerId = Objects.requireNonNull(snapshot.child("customerRideId").getValue()).toString();
                     Log.d(TAG, "Assigned customer ID: " + customerId);
                     // Lấy vị trí của khách hàng
-                    if (getAssignedCustomerPickupLocation())
+                    if (getAssignedCustomerPickupLocation()) {
                         //chuyển trang thái driver: available -> working
                         changeDriverStatusToWorking();
+                        getAssignedCustomerPickupInfor();
+                    }
+
                 } else {
+                    mCustomerInfor.setVisibility(View.GONE);
+                    customerName.setText("");
+                    customerPhone.setText("");
+                    customerProfileImage.setImageResource(R.mipmap.icon_default_user);
                     Log.w(TAG, "getAssignedCustomer: No assigned customer found");
                     customerId = ""; // Reset customerId
                     if (pickupMarker != null)
@@ -238,6 +219,35 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         });
 
     }
+    private void getAssignedCustomerPickupInfor() {
+        mCustomerInfor.setVisibility(View.VISIBLE);
+        DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Customers").child(customerId);
+        mCustomerDatabase.addValueEventListener(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists() && snapshot.getChildrenCount() > 0) {
+                    // Lấy thông tin người dùng từ snapshot
+                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
+                    if (map.containsKey("name")) {
+                        String mName = map.get("name").toString();
+                        customerName.setText(mName);
+                    }
+                    if (map.containsKey("phone")) {
+                        String mPhone = map.get("phone").toString();
+                        customerPhone.setText(mPhone);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
 
     private void calculateDistance(LatLng driverLatLng, LatLng customerLatLng) {
         if (driverLatLng == null || customerLatLng == null) {

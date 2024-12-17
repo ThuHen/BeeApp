@@ -50,6 +50,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
+import com.google.android.gms.common.api.Status;
+import com.google.android.libraries.places.api.model.Place;
+
 public class CustomerMapActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
@@ -67,9 +74,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Button mCallDriver;
 
 
+
+
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "CustomerMapActivity"; // Tag dùng trong Logcat
     private Boolean requestBol = false;
+
+    private AutocompleteSupportFragment autocompleteFragment;
+    private String destinaion;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,7 +146,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     //xóa kết nối giữa driver và customer
                     if (driverFoundID != null) {
                         DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
-                                .child("Users").child("Drivers").child(driverFoundID);
+                                .child("Users").child("Drivers");
                         driverRef.setValue(true);
                         Log.d(TAG, "mRequestonClick: driverRef.setValue(true)");
                         driverFoundID = null;
@@ -185,10 +197,27 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 startActivity(intent);
                 return;
             }
+
         });
 
+        autocompleteFragment = (AutocompleteSupportFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.autoComplete_Fragment);
 
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                // Xử lý khi người dùng chọn địa điểm
+                destinaion = place.getName().toString();   // Lấy tên địa điểm
+            }
+
+            @Override
+            public void onError(Status status) {
+                // Xử lý khi có lỗi xảy ra
+                Log.e("Place", "An error occurred: " + status);
+            }
+        });
     }
+
 
     private void cancelRequestClosestDriver() {
         //xóa customerRequest
@@ -233,12 +262,13 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     Log.e(TAG, "getClosestDriver: Driver ID is " + key);
                     //vào firebase tài xế gần nhất
                     DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
-                            .child("Users").child("Drivers").child(driverFoundID);
+                            .child("Users").child("Drivers").child(driverFoundID).child("customerRequest");
                     // lấy id customer
                     String customerID = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
                     // lưu id customerRequest vào driver
                     HashMap map = new HashMap();
                     map.put("customerRideId", customerID);//lưu id customer
+                    map.put("destination",destinaion);
                     // cập nhật driver
                     driverRef.updateChildren(map);
                     // hiện market vị trí tài xế

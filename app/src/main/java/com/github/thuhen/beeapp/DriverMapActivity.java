@@ -66,6 +66,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private ImageView customerProfileImage;
     private TextView customerName;
     private TextView customerPhone;
+    private TextView customerDestination;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -109,6 +110,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         customerProfileImage = findViewById(R.id.customer_profile_image);
         customerName = findViewById(R.id.customer_name);
         customerPhone = findViewById(R.id.customer_phone);
+        customerDestination = findViewById(R.id.customer_Destination);
     }
 
     private Marker pickupMarker;
@@ -180,7 +182,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         String driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         // Lấy thông tin tài xế này từ Firebase
         DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
-                .child("Users").child("Drivers").child(driverId);
+                .child("Users").child("Drivers").child(driverId).child("customerRequest").child("customerRideId");
         // Lắng nghe sự thay đổi của thông tin tài xế
         assignedCustomerRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -194,6 +196,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     if (getAssignedCustomerPickupLocation()) {
                         //chuyển trang thái driver: available -> working
                         changeDriverStatusToWorking();
+                        getAssignedCustomerDestination();
                         getAssignedCustomerPickupInfor();
                     }
 
@@ -201,6 +204,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     mCustomerInfor.setVisibility(View.GONE);
                     customerName.setText("");
                     customerPhone.setText("");
+                    customerDestination.setText("Destination--");
                     customerProfileImage.setImageResource(R.mipmap.icon_default_user);
                     Log.w(TAG, "getAssignedCustomer: No assigned customer found");
                     customerId = ""; // Reset customerId
@@ -219,6 +223,30 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         });
 
     }
+
+    private void getAssignedCustomerDestination() {
+        String driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Drivers").child(driverId).child("customerRequest").child("destination");
+        assignedCustomerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists() && snapshot.hasChild("customerRideId")) {
+                    String destination = snapshot.getValue().toString();
+                    customerDestination.setText("Destination"+destination);
+                } else {
+                    customerDestination.setText("Destination--");
+
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Error fetching assigned customer: " + error.getMessage());
+            }
+        });
+
+    }
+
     private void getAssignedCustomerPickupInfor() {
         mCustomerInfor.setVisibility(View.VISIBLE);
         DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference()

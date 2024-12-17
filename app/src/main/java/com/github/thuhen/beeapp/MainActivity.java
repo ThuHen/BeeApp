@@ -12,10 +12,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.FragmentTransaction;
+
+
+
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity"; // Đặt tag cho Log
     private Button mDriver, mCustomer;
+
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -58,5 +63,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Log.e(TAG, "Buttons not found! Check your layout file."); // Log lỗi nếu các nút không được tìm thấy
         }
+
     }
 }

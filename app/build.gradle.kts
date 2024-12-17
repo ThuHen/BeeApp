@@ -53,8 +53,8 @@ dependencies {
     // https://firebase.google.com/docs/firestore/solutions/geoqueries
     implementation ("com.firebase:geofire-android-common:3.2.0")
     implementation ("com.google.android.gms:play-services-location:21.0.1")
-
-
+    //
+    implementation ("com.google.android.libraries.places:places:2.7.0")
 
     implementation(libs.appcompat)
     implementation(libs.material)

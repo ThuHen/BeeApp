@@ -5,19 +5,40 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:rotationX="6"
     tools:context=".CustomerMapActivity">
 
+<RelativeLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
     <Button
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
         android:id="@+id/logout"
-        android:text="@string/log_out"/>
-    <Button
-        android:layout_gravity="right"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/log_out" />
+
+    <Button
+        android:layout_alignParentRight="true"
         android:id="@+id/setting"
-        android:text="@string/setting_button"/>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:text="@string/setting_button" />
+
+    <androidx.cardview.widget.CardView
+        android:layout_below="@id/setting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20sp">
+
+        <fragment
+            android:id="@+id/autoComplete_Fragment"
+            android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </androidx.cardview.widget.CardView>    
+</RelativeLayout>
 
     <fragment
         android:id="@+id/id_map"
@@ -27,9 +48,9 @@
         tools:layout="@layout/activity_customer_map" />
 
     <Button
+        android:id="@+id/button_call_request"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/call_bee"
-        android:id="@+id/button_call_request"
-        android:layout_gravity="bottom"/>
+        android:layout_gravity="bottom"
+        android:text="@string/call_bee" />
 </FrameLayout>

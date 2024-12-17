@@ -456,7 +456,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
                         double latitude = location.getLatitude();
                         double longitude = location.getLongitude();
-                        Log.d(TAG, "onLocationResult: Location - Lat: " + latitude + ", Lng: " + longitude);
+                       // Log.d(TAG, "onLocationResult: Location - Lat: " + latitude + ", Lng: " + longitude);
                         userLocation = new LatLng(latitude, longitude);
 
                         if (!hasMovedCamera) {

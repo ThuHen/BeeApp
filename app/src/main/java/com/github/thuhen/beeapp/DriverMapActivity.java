@@ -343,7 +343,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     if (location != null) {
                         double latitude = location.getLatitude();
                         double longitude = location.getLongitude();
-                        Log.d(TAG, "onLocationResult: Location - Lat: " + latitude + ", Lng: " + longitude);
+                       // Log.d(TAG, "onLocationResult: Location - Lat: " + latitude + ", Lng: " + longitude);
                         userLocation = new LatLng(latitude, longitude);
 
                         if (!hasMovedCamera) {

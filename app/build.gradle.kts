@@ -41,7 +41,8 @@ android {
 dependencies {
     implementation ("com.google.android.gms:play-services-location:21.3.0")//for location
     implementation ("com.google.android.gms:play-services-maps:19.0.0")
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-database")
     // Full GeoFire library for Realtime Database users

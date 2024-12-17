@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -48,6 +49,7 @@ public class CustomerLoginActivity extends AppCompatActivity {
         editTextMail = findViewById(R.id.txt_email);
         editTextPassword = findViewById(R.id.txt_password);
         mLogin = findViewById(R.id.btn_login);
+
         mRegistration = findViewById(R.id.btn_registration);
         mAuth = FirebaseAuth.getInstance();
 ///auto signin

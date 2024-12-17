@@ -9,7 +9,14 @@
     android:orientation="vertical"
     android:padding="20sp"
     tools:context=".CustomerSettingActivity">
+<ImageView
+    android:layout_width="100sp"
+    android:layout_height="100sp"
+    android:id="@+id/profile_image"
+    android:src="@mipmap/icon_default_user"
+    android:layout_marginBottom="20sp"
 
+    />
     <EditText
         android:id="@+id/setting_name"
         android:layout_width="match_parent"

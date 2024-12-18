@@ -35,7 +35,9 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAFaAJ_j7LyuoGQK25zcPNd5x0YxtfmJdY" />
-
+        <meta-data
+            android:name="com.google.android.libraries.places.DEBUG_LOGGING"
+            android:value="true" />
         <activity
             android:name=".DriverMapActivity"
             android:exported="true"

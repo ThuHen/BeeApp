@@ -22,6 +22,7 @@ import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
 import com.github.thuhen.beeapp.databinding.ActivityCustomerMapBinding;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -37,6 +38,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.libraries.places.api.model.TypeFilter;
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -48,6 +54,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import com.google.android.gms.maps.SupportMapFragment;
@@ -72,8 +79,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Marker pickupMarker;
     private String customerId = "";
     private Button mCallDriver;
-
-
 
 
     private static final int LOCATION_REQUEST_CODE = 100;
@@ -146,7 +151,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     //xóa kết nối giữa driver và customer
                     if (driverFoundID != null) {
                         DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
-                                .child("Users").child("Drivers");
+                                .child("Users").child("Drivers").child(driverFoundID);
                         driverRef.setValue(true);
                         Log.d(TAG, "mRequestonClick: driverRef.setValue(true)");
                         driverFoundID = null;
@@ -200,9 +205,15 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
         });
 
-        autocompleteFragment = (AutocompleteSupportFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.autoComplete_Fragment);
+        //Khởi tạo Google Places API
+        if (!Places.isInitialized()) {
+            Places.initialize(getApplicationContext(), getString(R.string.maps_api_key));
+        }
 
+        // Tìm AutocompleteSupportFragment trong layout
+        autocompleteFragment = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autoComplete_fragment);
+        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS));
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
@@ -216,11 +227,28 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 Log.e("Place", "An error occurred: " + status);
             }
         });
+        PlacesClient placesClient = Places.createClient(this);
+        FindAutocompletePredictionsRequest predictionsRequest = FindAutocompletePredictionsRequest.builder()
+                .setQuery("your_query")
+                .setTypeFilter(TypeFilter.ESTABLISHMENT)
+                .build();
+
+        placesClient.findAutocompletePredictions(predictionsRequest)
+                .addOnFailureListener(exception -> {
+                    Log.e("PlacesAPIError", "Request failed. Message: " + exception.getMessage());
+                    if (exception instanceof ApiException) {
+                        ApiException apiException = (ApiException) exception;
+                        Log.e("PlacesAPIError", "Status code: " + apiException.getStatusCode());
+                    }
+                });
+
+
+
     }
 
 
     private void cancelRequestClosestDriver() {
-        //xóa customerRequest
+        //xóa customerRequest lớn ở bên ngoài
         String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         DatabaseReference userLocationRef = FirebaseDatabase.getInstance().getReference("customerRequest");
         GeoFire geoFire = new GeoFire(userLocationRef);
@@ -256,6 +284,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
+                // Nếu tài xế đã được ghép, lấy tọa độ vị trí tài xế
                 if (!driverFound && requestBol) {
                     driverFound = true;
                     driverFoundID = key;
@@ -268,7 +297,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     // lưu id customerRequest vào driver
                     HashMap map = new HashMap();
                     map.put("customerRideId", customerID);//lưu id customer
-                    map.put("destination",destinaion);
+                    map.put("destination", destinaion);
                     // cập nhật driver
                     driverRef.updateChildren(map);
                     // hiện market vị trí tài xế
@@ -448,7 +477,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

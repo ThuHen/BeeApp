@@ -445,7 +445,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         // Chuyển đổi sang km
         float distanceInKm = distanceInMeters / 1000;
         if (distanceInKm < 0.01)
-            mRequest.setText("@string/driver_is_here");
+            mRequest.setText(R.string.driver_is_here);
         else {
             mRequest.setText(String.format("Driver Found: %.2f km away", distanceInKm));
 

@@ -182,22 +182,28 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         String driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         // Lấy thông tin tài xế này từ Firebase
         DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
-                .child("Users").child("Drivers").child(driverId).child("customerRequest").child("customerRideId");
+                .child("Users").child("Drivers").child(driverId);
         // Lắng nghe sự thay đổi của thông tin tài xế
         assignedCustomerRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // Nếu tài xế đã được gán cho khách hàng, lấy ID của khách hàng
-                if (snapshot.exists() && snapshot.hasChild("customerRideId")) {
-                    // Lấy ID của khách hàng
-                    customerId = Objects.requireNonNull(snapshot.child("customerRideId").getValue()).toString();
-                    Log.d(TAG, "Assigned customer ID: " + customerId);
-                    // Lấy vị trí của khách hàng
-                    if (getAssignedCustomerPickupLocation()) {
-                        //chuyển trang thái driver: available -> working
-                        changeDriverStatusToWorking();
-                        getAssignedCustomerDestination();
-                        getAssignedCustomerPickupInfor();
+                // Nếu tài xế đã nhận yêu cầu từ khách hàng
+                if (snapshot.exists() && snapshot.hasChild("customerRequest")) {
+                    // Kiểm tra xem customerRequest có chứa customerRideId không
+                    if (snapshot.child("customerRequest").hasChild("customerRideId")) {
+                        // Lấy ID của khách hàng từ customerRideId
+                        customerId = Objects.requireNonNull(snapshot.child("customerRequest").child("customerRideId").getValue()).toString();
+                        Log.d(TAG, "Assigned customer ID: " + customerId);
+
+                        // Lấy vị trí của khách hàng
+                        if (getAssignedCustomerPickupLocation()) {
+                            // chuyển trạng thái driver: available -> working
+                            changeDriverStatusToWorking();
+                            getAssignedCustomerDestination();
+                            getAssignedCustomerPickupInfor();
+                        }
+                    } else {
+                        Log.d(TAG, "customerRequest exists, but no customerRideId found.");
                     }
 
                 } else {

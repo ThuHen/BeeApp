@@ -62,6 +62,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "DriverMapActivity"; // Tag dùng trong Logcat
     private Button mLogout;
+    private Button mSettings;
     private LinearLayout mCustomerInfor;
     private ImageView customerProfileImage;
     private TextView customerName;
@@ -106,11 +107,21 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             }
         });
+        mSettings = findViewById(R.id.settings);
         mCustomerInfor = findViewById(R.id.customer_infor);
         customerProfileImage = findViewById(R.id.customer_profile_image);
         customerName = findViewById(R.id.customer_name);
         customerPhone = findViewById(R.id.customer_phone);
         customerDestination = findViewById(R.id.customer_Destination);
+        mSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(DriverMapActivity.this, DriverSettingActivity.class);
+                startActivity(intent);
+                //finish();
+                return;
+            }
+        });
     }
 
     private Marker pickupMarker;
@@ -207,11 +218,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     }
 
                 } else {
-                    mCustomerInfor.setVisibility(View.GONE);
-                    customerName.setText("");
-                    customerPhone.setText("");
-                    customerDestination.setText("Destination--");
-                    customerProfileImage.setImageResource(R.mipmap.icon_default_user);
+                    hideCustomerInfoUI();
                     Log.w(TAG, "getAssignedCustomer: No assigned customer found");
                     customerId = ""; // Reset customerId
                     if (pickupMarker != null)
@@ -228,6 +235,13 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
         });
 
+    }
+    private void hideCustomerInfoUI() {
+        mCustomerInfor.setVisibility(View.GONE);
+        customerName.setText("");
+        customerPhone.setText("");
+        customerDestination.setText(R.string.destination);
+        customerProfileImage.setImageResource(R.mipmap.icon_default_user);
     }
 
     private void getAssignedCustomerDestination() {

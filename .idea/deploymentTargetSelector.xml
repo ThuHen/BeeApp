@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-12-18T09:26:12.406975400Z">
+        <DropdownSelection timestamp="2024-12-20T10:01:35.273194Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\drivers.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\Co.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,16 +15,19 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\drivers.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\Custome.avd" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\customer_1.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\drivers.avd" />
               </handle>
             </Target>
           </targets>
         </DialogSelection>
+      </SelectionState>
+      <SelectionState runConfigName="customerMap">
+        <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
   </component>

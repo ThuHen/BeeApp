@@ -15,6 +15,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
@@ -55,6 +58,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 import com.google.android.gms.maps.SupportMapFragment;
@@ -79,6 +83,11 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Marker pickupMarker;
     private String customerId = "";
     private Button mCallDriver;
+    private LinearLayout mDriverInfor;
+    private ImageView driverProfileImage;
+    private TextView driverName;
+    private TextView driverPhone;
+    private TextView driverCar;
 
 
     private static final int LOCATION_REQUEST_CODE = 100;
@@ -112,8 +121,13 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         if (!checkLocationPermission())
             requestForPermissions();
         getUserLocation();
-
+        mDriverInfor = findViewById(R.id.driver_infor);
+        driverProfileImage = findViewById(R.id.driver_profile_image);
+        driverName = findViewById(R.id.driver_name);
+        driverPhone = findViewById(R.id.driver_phone);
+        driverCar = findViewById(R.id.driver_car);
         mLogout = (Button) findViewById(R.id.logout);
+
         if (mLogout == null) {
             Log.e("Error", "mLogout không được ánh xạ chính xác!");
             return;
@@ -145,18 +159,21 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             public void onClick(View view) {
                 if (requestBol) {
                     requestBol = false;
+
                     geoQuery.removeAllListeners();
                     //xóa driversWorking
                     driverLocationRef.removeEventListener(driverLocationListener);
-                    //xóa kết nối giữa driver và customer
+                    //xóa kết nối giữa driver và customer: xóa customerRequest con bên trong river
                     if (driverFoundID != null) {
                         DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
-                                .child("Users").child("Drivers").child(driverFoundID);
-                        driverRef.setValue(true);
+                                .child("Users").child("Drivers").child(driverFoundID).child("customerRequest");
+                       // driverRef.setValue(true);
+                        driverRef.removeValue();
                         Log.d(TAG, "mRequestonClick: driverRef.setValue(true)");
                         driverFoundID = null;
                     }
                     cancelRequestClosestDriver();
+                    hideDriverInfoUI();
 
                 } else {
                     requestBol = true;
@@ -246,6 +263,13 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
     }
 
+    private void hideDriverInfoUI() {
+        mDriverInfor.setVisibility(View.GONE);
+        driverName.setText("");
+        driverPhone.setText("");
+        driverCar.setText("");
+        driverProfileImage.setImageResource(R.mipmap.icon_default_user);
+    }
 
     private void cancelRequestClosestDriver() {
         //xóa customerRequest lớn ở bên ngoài
@@ -302,6 +326,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     driverRef.updateChildren(map);
                     // hiện market vị trí tài xế
                     getDriverLocation();
+                    getDriverPickupInfor();//
                     mRequest.setText(R.string.looking_for_driver_location);
                 }
             }
@@ -333,6 +358,45 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             @Override
             public void onGeoQueryError(DatabaseError error) {
 
+            }
+        });
+    }
+
+    private void getDriverPickupInfor() {
+        // Hiển thị thông tin tài xế
+        mDriverInfor.setVisibility(View.VISIBLE);
+        DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Drivers").child(driverFoundID);
+        mCustomerDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // Nếu tài xế đã được ghép, lấy thông tin tài xế
+                if (snapshot.exists() && snapshot.getChildrenCount() > 0) {
+                    // Lấy thông tin người dùng từ snapshot
+                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
+                    if (map.containsKey("name")) {
+                        String mName = map.get("name").toString();
+                        driverName.setText(mName);
+                    }
+                    if (map.containsKey("phone")) {
+                        String mPhone = map.get("phone").toString();
+                        driverPhone.setText(mPhone);
+                    }
+                    if (map.containsKey("car")) {
+                        String mCar = map.get("car").toString();
+                        driverCar.setText(mCar);
+                    }
+                }
+                else
+                    // Nếu không tìm thấy tài xế, hiển thị thông báo
+                {
+                    Toast.makeText(CustomerMapActivity.this, "Không có thông tin của tài xế này", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "onDataChange: No driver found");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
             }
         });
     }

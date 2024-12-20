@@ -19,6 +19,9 @@
         android:theme="@style/Theme.BeeApp"
         tools:targetApi="31">
         <activity
+            android:name=".DriverSettingActivity"
+            android:exported="false" />
+        <activity
             android:name=".CustomerSettingActivity"
             android:exported="false" />
         <!--
@@ -38,6 +41,7 @@
         <meta-data
             android:name="com.google.android.libraries.places.DEBUG_LOGGING"
             android:value="true" />
+
         <activity
             android:name=".DriverMapActivity"
             android:exported="true"

@@ -89,8 +89,9 @@ public class DriverLoginActivity extends AppCompatActivity {
                             String user_id = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
                             DatabaseReference current_user_db = FirebaseDatabase.getInstance()
                                     .getReference().child("Users").child("Drivers")
-                                    .child(user_id);
-                            current_user_db.setValue(true);
+                                    .child(user_id).child("name");
+                            current_user_db.setValue(email);
+                           // current_user_db.setValue(true);
                             Toast.makeText(DriverLoginActivity.this, R.string.sign_up_sucessful,
                                     Toast.LENGTH_SHORT).show();
                         }

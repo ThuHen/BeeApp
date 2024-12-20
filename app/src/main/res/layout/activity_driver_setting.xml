@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="20sp"
+    tools:context=".DriverSettingActivity">
+
+    <ImageView
+        android:id="@+id/profile_image"
+        android:layout_width="100sp"
+        android:layout_height="100sp"
+        android:layout_marginBottom="20sp"
+        android:src="@mipmap/icon_default_driver" />
+
+    <EditText
+        android:id="@+id/setting_name"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="20sp"
+        android:background="@null"
+        android:hint="@string/name_setting"
+        android:padding="5sp" />
+
+    <EditText
+        android:id="@+id/setting_phone"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="20sp"
+        android:background="@null"
+        android:hint="@string/phone_setting"
+        android:padding="10sp" />
+
+    <EditText
+        android:id="@+id/setting_car"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="20sp"
+        android:background="@null"
+        android:hint="@string/car_setting"
+        android:padding="10sp" />
+
+    <Button
+        android:id="@+id/setting_confirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15sp"
+        android:layout_marginRight="15sp"
+        android:text="@string/confirm_setting" />
+
+    <Button
+        android:id="@+id/setting_back"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15sp"
+        android:layout_marginRight="15sp"
+        android:text="@string/confirm_back" />
+
+
+</LinearLayout>

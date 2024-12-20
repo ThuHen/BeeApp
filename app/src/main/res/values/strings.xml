@@ -32,6 +32,8 @@
     <string name="enter_email">Vui lòng nhập tài khoản</string>
     <string name="enter_password">Vui lòng nhập mật khẩu</string>
     <string name="enter_infor">Hãy điền thông tin vào.</string>
+    <string name="car_setting">Loại xe</string>
+    <string name="destination">destination</string>
 
 
 </resources>

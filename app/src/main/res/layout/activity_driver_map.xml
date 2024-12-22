@@ -19,7 +19,11 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:text="@string/setting_button" />
-
+    <fragment
+        android:id="@+id/id_map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <LinearLayout
         android:id="@+id/customer_infor"
@@ -29,6 +33,8 @@
         android:background="@android:color/white"
         android:orientation="horizontal"
         android:visibility="gone">
+<!--        android:layout_marginBottom="50dp"-->
+
 
         <ImageView
             android:id="@+id/customer_profile_image"
@@ -67,10 +73,6 @@
 
         </LinearLayout>
     </LinearLayout>
-    <fragment
-        android:id="@+id/id_map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+
 
 </FrameLayout>

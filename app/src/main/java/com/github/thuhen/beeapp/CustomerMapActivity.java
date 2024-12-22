@@ -44,8 +44,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.libraries.places.api.model.TypeFilter;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
 import com.google.android.libraries.places.api.net.PlacesClient;
-import com.google.android.libraries.places.widget.Autocomplete;
-import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -57,11 +55,9 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
@@ -83,27 +79,22 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Marker pickupMarker;
     private String customerId = "";
     private Button mCallDriver;
-    private LinearLayout mDriverInfor;
+    private LinearLayout mDriverInfo;
     private ImageView driverProfileImage;
     private TextView driverName;
     private TextView driverPhone;
     private TextView driverCar;
-
-
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "CustomerMapActivity"; // Tag dùng trong Logcat
     private Boolean requestBol = false;
-
     private AutocompleteSupportFragment autocompleteFragment;
-    private String destinaion;
+    private String destination;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         com.github.thuhen.beeapp.databinding.ActivityCustomerMapBinding binding = ActivityCustomerMapBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
         Log.d(TAG, "onCreate: Activity started");
 
         // Load map fragment
@@ -121,7 +112,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         if (!checkLocationPermission())
             requestForPermissions();
         getUserLocation();
-        mDriverInfor = findViewById(R.id.driver_infor);
+        mDriverInfo = findViewById(R.id.driver_info);
         driverProfileImage = findViewById(R.id.driver_profile_image);
         driverName = findViewById(R.id.driver_name);
         driverPhone = findViewById(R.id.driver_phone);
@@ -163,11 +154,11 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     geoQuery.removeAllListeners();
                     //xóa driversWorking
                     driverLocationRef.removeEventListener(driverLocationListener);
-                    //xóa kết nối giữa driver và customer: xóa customerRequest con bên trong river
+                    //xóa kết nối giữa driver và customer: xóa customerRequest con bên trong driver
                     if (driverFoundID != null) {
                         DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
                                 .child("Users").child("Drivers").child(driverFoundID).child("customerRequest");
-                       // driverRef.setValue(true);
+                        // driverRef.setValue(true);
                         driverRef.removeValue();
                         Log.d(TAG, "mRequestonClick: driverRef.setValue(true)");
                         driverFoundID = null;
@@ -235,7 +226,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             @Override
             public void onPlaceSelected(Place place) {
                 // Xử lý khi người dùng chọn địa điểm
-                destinaion = place.getName().toString();   // Lấy tên địa điểm
+                destination = place.getName().toString();   // Lấy tên địa điểm
             }
 
             @Override
@@ -260,11 +251,11 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 });
 
 
-
     }
 
     private void hideDriverInfoUI() {
-        mDriverInfor.setVisibility(View.GONE);
+        Log.d(TAG, "hideDriverInfoUI: Hiding driver info UI");
+        mDriverInfo.setVisibility(View.GONE);
         driverName.setText("");
         driverPhone.setText("");
         driverCar.setText("");
@@ -321,12 +312,13 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     // lưu id customerRequest vào driver
                     HashMap map = new HashMap();
                     map.put("customerRideId", customerID);//lưu id customer
-                    map.put("destination", destinaion);
+                    map.put("destination", destination);
                     // cập nhật driver
                     driverRef.updateChildren(map);
                     // hiện market vị trí tài xế
                     getDriverLocation();
-                    getDriverPickupInfor();//
+                    // Hiển thị thông tin tài xế
+                    getDriverPickupInfo();
                     mRequest.setText(R.string.looking_for_driver_location);
                 }
             }
@@ -362,9 +354,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         });
     }
 
-    private void getDriverPickupInfor() {
+    private void getDriverPickupInfo() {
+        Log.d(TAG, "getDriverPickupInfo: Getting driver pickup info");
         // Hiển thị thông tin tài xế
-        mDriverInfor.setVisibility(View.VISIBLE);
+        mDriverInfo.setVisibility(View.VISIBLE);
         DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference()
                 .child("Users").child("Drivers").child(driverFoundID);
         mCustomerDatabase.addValueEventListener(new ValueEventListener() {
@@ -386,12 +379,11 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                         String mCar = map.get("car").toString();
                         driverCar.setText(mCar);
                     }
-                }
-                else
-                    // Nếu không tìm thấy tài xế, hiển thị thông báo
+                } else
+                // Nếu không tìm thấy tài xế, hiển thị thông báo
                 {
                     Toast.makeText(CustomerMapActivity.this, "Không có thông tin của tài xế này", Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "onDataChange: No driver found");
+                    Log.e(TAG, "getDriverPickupInfoonDataChange: No driver found");
                 }
             }
 

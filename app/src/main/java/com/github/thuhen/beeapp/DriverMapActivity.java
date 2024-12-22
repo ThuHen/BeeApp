@@ -129,6 +129,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private ValueEventListener assignedCustomerPickupLocationListener;
 
     private Boolean getAssignedCustomerPickupLocation() {
+        Log.d(TAG, "getAssignedCustomerPickupLocation: ");
         // Kiểm tra xem customerId có hợp lệ không
         if (customerId != null && !customerId.isEmpty()) {
             //get l: location customerRequest
@@ -157,6 +158,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         double locationLng = Double.parseDouble(locationData.get(1).toString());
                         LatLng customerLatLng = new LatLng(locationLat, locationLng);
                         // Add marker to map
+                        if (pickupMarker != null)
+                            pickupMarker.remove();
                         pickupMarker = mMap.addMarker(new MarkerOptions()
                                 .position(customerLatLng)
                                 .title("Customer Pickup Location")
@@ -211,7 +214,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                             // chuyển trạng thái driver: available -> working
                             changeDriverStatusToWorking();
                             getAssignedCustomerDestination();
-                            getAssignedCustomerPickupInfor();
+                            getAssignedCustomerPickupInfo();
                         }
                     } else {
                         Log.d(TAG, "customerRequest exists, but no customerRideId found.");
@@ -231,12 +234,13 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "Error fetching assigned customer: " + error.getMessage());
+                Log.e(TAG, "getAssignedCustomer: Error fetching assigned customer: " + error.getMessage());
             }
         });
 
     }
     private void hideCustomerInfoUI() {
+        Log.d(TAG, "hideCustomerInfoUI: Hiding customer info UI");
         mCustomerInfor.setVisibility(View.GONE);
         customerName.setText("");
         customerPhone.setText("");
@@ -245,6 +249,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     }
 
     private void getAssignedCustomerDestination() {
+        Log.d(TAG, "getAssignedCustomerDestination: ");
         String driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
                 .child("Users").child("Drivers").child(driverId).child("customerRequest").child("destination");
@@ -267,7 +272,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     }
 
-    private void getAssignedCustomerPickupInfor() {
+    private void getAssignedCustomerPickupInfo() {
+        Log.d(TAG, "getAssignedCustomerPickupInfo: ");
         mCustomerInfor.setVisibility(View.VISIBLE);
         DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference()
                 .child("Users").child("Customers").child(customerId);
@@ -291,6 +297,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "getAssignedCustomerPickupInfo:Error fetching customer info: " + error.getMessage());
 
             }
         });

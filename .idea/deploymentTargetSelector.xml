@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DIALOG" />
-        <DropdownSelection timestamp="2024-12-22T05:59:50.633762500Z">
+        <DropdownSelection timestamp="2024-12-22T15:04:26.303610200Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\driver.avd" />
@@ -15,12 +15,12 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\driver.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\Co.avd" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\Co.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\HIEN\.android\avd\driver.avd" />
               </handle>
             </Target>
           </targets>

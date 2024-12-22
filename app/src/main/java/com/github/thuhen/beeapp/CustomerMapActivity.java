@@ -77,8 +77,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     //vi tri đón khách nay
     private LatLng pickupLocation;
     private Marker pickupMarker;
-    private String customerId = "";
-    private Button mCallDriver;
+    private LatLng destinationLocation;
+    private Marker destinationMarker;
     private LinearLayout mDriverInfo;
     private ImageView driverProfileImage;
     private TextView driverName;
@@ -87,8 +87,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "CustomerMapActivity"; // Tag dùng trong Logcat
     private Boolean requestBol = false;
-    private AutocompleteSupportFragment autocompleteFragment;
-    private String destination;
+//    private AutocompleteSupportFragment autocompleteFragment;
+    //private String destination;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,9 +119,13 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         driverPhone = findViewById(R.id.driver_phone);
         driverCar = findViewById(R.id.driver_car);
         mLogout = (Button) findViewById(R.id.logout);
-
         if (mLogout == null) {
             Log.e("Error", "mLogout không được ánh xạ chính xác!");
+            return;
+        }
+        mRequest = findViewById(R.id.button_call_request);
+        if (mRequest == null) {
+            Log.e("Error", "mRequest không được ánh xạ chính xác!");
             return;
         }
         mLogout.setOnClickListener(new View.OnClickListener() {
@@ -138,35 +143,16 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
             }
         });
-
-        mRequest = findViewById(R.id.button_call_request);
-        if (mRequest == null) {
-            Log.e("Error", "mRequest không được ánh xạ chính xác!");
-            return;
-        }
         mRequest.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("MissingPermission")
             @Override
             public void onClick(View view) {
-                if (requestBol) {
-                    requestBol = false;
-
-                    geoQuery.removeAllListeners();
-                    //xóa driversWorking
-                    driverLocationRef.removeEventListener(driverLocationListener);
-                    //xóa kết nối giữa driver và customer: xóa customerRequest con bên trong driver
-                    if (driverFoundID != null) {
-                        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
-                                .child("Users").child("Drivers").child(driverFoundID).child("customerRequest");
-                        // driverRef.setValue(true);
-                        driverRef.removeValue();
-                        Log.d(TAG, "mRequestonClick: driverRef.setValue(true)");
-                        driverFoundID = null;
-                    }
-                    cancelRequestClosestDriver();
-                    hideDriverInfoUI();
-
-                } else {
+                if (destinationMarker == null) {
+                    Toast.makeText(CustomerMapActivity.this, R.string.destination_not_set, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "onClick: destinationMarker is null");
+                    return;
+                }
+                if (!requestBol) {
                     requestBol = true;
                     fusedLocationProviderClient.getLastLocation()
                             .addOnSuccessListener(CustomerMapActivity.this, new OnSuccessListener<Location>() {
@@ -194,10 +180,26 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                                     getClosestDriver();
                                 }
                             });
+
+                } else {
+                    requestBol = false;
+                    geoQuery.removeAllListeners();
+                    //xóa driversWorking
+                    driverLocationRef.removeEventListener(driverLocationListener);
+                    //xóa kết nối giữa driver và customer: xóa customerRequest con bên trong driver
+                    if (driverFoundID != null) {
+                        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
+                                .child("Users").child("Drivers").child(driverFoundID).child("customerRequest");
+                        // driverRef.setValue(true);
+                        driverRef.removeValue();
+                        Log.d(TAG, "mRequestonClick: driverRef.setValue(true)");
+                        driverFoundID = null;
+                    }
+                    cancelRequestClosestDriver();
+                    hideDriverInfoUI();
                 }
             }
         });
-
         mSetting = (Button) findViewById(R.id.setting);
         if (mSetting == null) {
             Log.e("Error", "mSetting không được ánh xạ chính xác!");
@@ -212,45 +214,42 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             }
 
         });
-
-        //Khởi tạo Google Places API
-        if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), getString(R.string.maps_api_key));
-        }
-
-        // Tìm AutocompleteSupportFragment trong layout
-        autocompleteFragment = (AutocompleteSupportFragment)
-                getSupportFragmentManager().findFragmentById(R.id.autoComplete_fragment);
-        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS));
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(Place place) {
-                // Xử lý khi người dùng chọn địa điểm
-                destination = place.getName().toString();   // Lấy tên địa điểm
-            }
-
-            @Override
-            public void onError(Status status) {
-                // Xử lý khi có lỗi xảy ra
-                Log.e("Place", "An error occurred: " + status);
-            }
-        });
-        PlacesClient placesClient = Places.createClient(this);
-        FindAutocompletePredictionsRequest predictionsRequest = FindAutocompletePredictionsRequest.builder()
-                .setQuery("your_query")
-                .setTypeFilter(TypeFilter.ESTABLISHMENT)
-                .build();
-
-        placesClient.findAutocompletePredictions(predictionsRequest)
-                .addOnFailureListener(exception -> {
-                    Log.e("PlacesAPIError", "Request failed. Message: " + exception.getMessage());
-                    if (exception instanceof ApiException) {
-                        ApiException apiException = (ApiException) exception;
-                        Log.e("PlacesAPIError", "Status code: " + apiException.getStatusCode());
-                    }
-                });
-
-
+//        //Khởi tạo Google Places API
+//        if (!Places.isInitialized()) {
+//            Places.initialize(getApplicationContext(), getString(R.string.maps_api_key));
+//        }
+//
+//        // Tìm AutocompleteSupportFragment trong layout
+//        autocompleteFragment = (AutocompleteSupportFragment)
+//                getSupportFragmentManager().findFragmentById(R.id.autoComplete_fragment);
+//        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS));
+//        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+//            @Override
+//            public void onPlaceSelected(Place place) {
+//                // Xử lý khi người dùng chọn địa điểm
+//                destination = place.getName().toString();   // Lấy tên địa điểm
+//            }
+//
+//            @Override
+//            public void onError(Status status) {
+//                // Xử lý khi có lỗi xảy ra
+//                Log.e("Place", "An error occurred: " + status);
+//            }
+//        });
+//        PlacesClient placesClient = Places.createClient(this);
+//        FindAutocompletePredictionsRequest predictionsRequest = FindAutocompletePredictionsRequest.builder()
+//                .setQuery("your_query")
+//                .setTypeFilter(TypeFilter.ESTABLISHMENT)
+//                .build();
+//
+//        placesClient.findAutocompletePredictions(predictionsRequest)
+//                .addOnFailureListener(exception -> {
+//                    Log.e("PlacesAPIError", "Request failed. Message: " + exception.getMessage());
+//                    if (exception instanceof ApiException) {
+//                        ApiException apiException = (ApiException) exception;
+//                        Log.e("PlacesAPIError", "Status code: " + apiException.getStatusCode());
+//                    }
+//                });
     }
 
     private void hideDriverInfoUI() {
@@ -276,6 +275,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             pickupMarker.remove();
         if (mDriverMarker != null)
             mDriverMarker.remove();
+//        if (destinationMarker != null)
+//            destinationMarker.remove();
         mRequest.setText(R.string.call_bee);
     }
 
@@ -312,7 +313,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     // lưu id customerRequest vào driver
                     HashMap map = new HashMap();
                     map.put("customerRideId", customerID);//lưu id customer
-                    map.put("destination", destination);
+                    Map<String, Double> destinationMap = new HashMap<>();
+                    destinationMap.put("latitude", destinationLocation.latitude);
+                    destinationMap.put("longitude", destinationLocation.longitude);
+                    map.put("destination", destinationMap);
                     // cập nhật driver
                     driverRef.updateChildren(map);
                     // hiện market vị trí tài xế
@@ -512,7 +516,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
     }
 
-
     private Boolean checkLocationPermission() {
         Log.d(TAG, "checkLocationPermission: Checking permissions");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -642,21 +645,30 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         } else {
             Log.w(TAG, "onMapReady: Location permission not granted");
         }
-        // Xử lý sự kiện khi người dùng nhấp vào bản đồ
-        //
+
+        //Xử lý sự kiện khi người dùng nhấp vào bản đồ
+
         // có thể thêm chức năng: cửa sổ xác nhận đặt điểm đón
-//        mMap.setOnMapClickListener(latLng -> {
-//            Log.d(TAG, "onMapClick: User clicked on map");
-//            // Lưu tọa độ của điểm được chọn
-//            pickupLocation = latLng;
-//            // Xóa tất cả marker cũ
-//            mMap.clear();
-//            // Thêm marker mới cho điểm được chọn
-//            mMap.addMarker(new MarkerOptions().position(pickupLocation).title("Pickup Location"));
-//            Toast.makeText(this, "Pickup location set!", Toast.LENGTH_SHORT).show();
-//            // Lưu tọa độ điểm đón vào Firebase
-//            saveCustomerRequest();
-//        });
+        mMap.setOnMapClickListener(latLng -> {
+            Log.d(TAG, "onMapClick: User clicked on map");
+
+            if (!requestBol) {
+                // Lưu tọa độ của điểm được chọn
+                destinationLocation = latLng;
+                // Xóa tất cả marker cũ
+                if (destinationMarker != null) {
+                    destinationMarker.remove();
+                }
+                // Thêm marker mới cho điểm được chọn
+                destinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLocation).title("Pickup Location"));
+                Toast.makeText(this, "Destination location set!", Toast.LENGTH_SHORT).show();
+                mRequest.setText(R.string.call_bee);
+                // Lưu tọa độ điểm đón vào Firebase
+                //saveCustomerRequest();
+            }
+        });
+
+
     }
 
     public void deleteLocationOnFirebase() {

@@ -34,6 +34,8 @@
     <string name="enter_infor">Hãy điền thông tin vào.</string>
     <string name="car_setting">Loại xe</string>
     <string name="destination">destination</string>
+    <string name="destination_not_set">Bạn chưa chọn điểm đến, hãy chọn điểm đến</string>
+    <string name="set_destination">Chọn một điểm đến trên ản đồ</string>
 
 
 </resources>

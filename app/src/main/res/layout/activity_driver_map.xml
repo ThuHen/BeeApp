@@ -19,62 +19,68 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:text="@string/setting_button" />
+
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/id_map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-
     <LinearLayout
-        android:id="@+id/customer_infor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:layout_gravity="bottom"
-        android:background="@android:color/white"
-        android:orientation="horizontal"
-        android:layout_marginBottom="50dp"
-        android:visibility="gone">
-
-
-
-        <ImageView
-            android:id="@+id/customer_profile_image"
-            android:layout_width="100sp"
-            android:layout_height="100sp"
-            android:padding="20sp"
-            android:src="@mipmap/icon_default_user" />
+        android:layout_marginBottom="50dp">
 
         <LinearLayout
-            android:id="@+id/customer_profile_info"
-            android:layout_width="wrap_content"
+            android:id="@+id/customer_infor"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingLeft="40sp">
+            android:background="@android:color/white"
+            android:orientation="horizontal"
+            android:visibility="gone">
 
-            <TextView
-                android:id="@+id/customer_Destination"
+            <ImageView
+                android:id="@+id/customer_profile_image"
+                android:layout_width="100sp"
+                android:layout_height="100sp"
+                android:padding="20sp"
+                android:src="@mipmap/icon_default_user" />
+
+            <LinearLayout
+                android:id="@+id/customer_profile_info"
                 android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:paddingBottom="10dp"
-                android:text="@string/destination" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingLeft="40sp">
 
-            <TextView
-                android:id="@+id/customer_name"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:paddingTop="10dp"
-                 />
+                <TextView
+                    android:id="@+id/customer_Destination"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:paddingBottom="10dp"
+                    android:text="@string/destination" />
 
-            <TextView
-                android:id="@+id/customer_phone"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:paddingTop="10dp"
-                />
+                <TextView
+                    android:id="@+id/customer_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:paddingTop="10dp" />
 
+                <TextView
+                    android:id="@+id/customer_phone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:paddingTop="10dp" />
+
+            </LinearLayout>
         </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_ride_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="pickup customer"/>
     </LinearLayout>
-
-
 </FrameLayout>

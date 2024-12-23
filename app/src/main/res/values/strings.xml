@@ -36,6 +36,9 @@
     <string name="destination">destination</string>
     <string name="destination_not_set">Bạn chưa chọn điểm đến, hãy chọn điểm đến</string>
     <string name="set_destination">Chọn một điểm đến trên ản đồ</string>
+    <string name="pickup_customer">pickup customer</string>
+    <string name="end_ride">complete</string>
+    <string name="no_customer">Hiện chưa có khách</string>
 
 
 </resources>

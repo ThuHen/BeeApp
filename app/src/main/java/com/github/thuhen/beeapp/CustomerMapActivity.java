@@ -182,10 +182,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                             });
 
                 } else {
-                    requestBol = false;
-                    geoQuery.removeAllListeners();
-                    //xóa driversWorking
-                    driverLocationRef.removeEventListener(driverLocationListener);
                     //xóa kết nối giữa driver và customer: xóa customerRequest con bên trong driver
                     if (driverFoundID != null) {
                         DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
@@ -195,8 +191,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                         Log.d(TAG, "mRequestonClick: driverRef.setValue(true)");
                         driverFoundID = null;
                     }
-                    cancelRequestClosestDriver();
-                    hideDriverInfoUI();
+                    endRide();
                 }
             }
         });
@@ -250,6 +245,46 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 //                        Log.e("PlacesAPIError", "Status code: " + apiException.getStatusCode());
 //                    }
 //                });
+    }
+
+    private DatabaseReference driverHasEndRef;
+    ValueEventListener driverHasEndListener;
+
+    private void getHasRiderEnd() {
+        // Lấy thông tin tài xế này từ Firebase
+        driverHasEndRef = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Drivers").child(driverFoundID).child("customerRequest");
+        // Lắng nghe sự thay đổi của thông tin tài xế
+        driverHasEndListener = driverHasEndRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+
+                } else {
+                    endRide();
+                    if (destinationMarker != null)
+                        destinationMarker.remove();
+                    mRequest.setText(R.string.set_destination);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+
+
+    private void endRide() {
+        Log.d(TAG, "endRide: ");
+        requestBol = false;
+        geoQuery.removeAllListeners();
+        driverLocationRef.removeEventListener(driverLocationListener);
+        driverHasEndRef.removeEventListener(driverHasEndListener);
+        cancelRequestClosestDriver();
+        hideDriverInfoUI();
     }
 
     private void hideDriverInfoUI() {
@@ -310,7 +345,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                             .child("Users").child("Drivers").child(driverFoundID).child("customerRequest");
                     // lấy id customer
                     String customerID = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-                    // lưu id customerRequest vào driver
+
                     HashMap map = new HashMap();
                     map.put("customerRideId", customerID);//lưu id customer
                     Map<String, Double> destinationMap = new HashMap<>();
@@ -324,6 +359,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     // Hiển thị thông tin tài xế
                     getDriverPickupInfo();
                     mRequest.setText(R.string.looking_for_driver_location);
+                    getHasRiderEnd();
+
                 }
             }
 
@@ -468,24 +505,24 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     }
 
     //luư tọa độ điểm đón của khách
-    private void saveCustomerRequest() {
-        if (pickupLocation == null) {
-            Log.e(TAG, "saveCustomerRequest: pickupLocation is null");
-            return;
-        }
-        // lấy id customer
-        String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-        // Lưu vị trí khách hàng vào Firebase customerRequest
-        DatabaseReference customerRequestRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(userId);
-        HashMap<String, Object> requestMap = new HashMap<>();
-
-        requestMap.put("l", Arrays.asList(pickupLocation.latitude, pickupLocation.longitude));
-        // update location pịckup at customerRequest
-        customerRequestRef.updateChildren(requestMap);
-        Log.d(TAG, "saveCustomerRequest: Customer request saved with location: " + pickupLocation.latitude + ", " + pickupLocation.longitude);
-
-
-    }
+//    private void saveCustomerRequest() {
+//        if (pickupLocation == null) {
+//            Log.e(TAG, "saveCustomerRequest: pickupLocation is null");
+//            return;
+//        }
+//        // lấy id customer
+//        String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+//        // Lưu vị trí khách hàng vào Firebase customerRequest
+//        DatabaseReference customerRequestRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(userId);
+//        HashMap<String, Object> requestMap = new HashMap<>();
+//
+//        requestMap.put("l", Arrays.asList(pickupLocation.latitude, pickupLocation.longitude));
+//        // update location pịckup at customerRequest
+//        customerRequestRef.updateChildren(requestMap);
+//        Log.d(TAG, "saveCustomerRequest: Customer request saved with location: " + pickupLocation.latitude + ", " + pickupLocation.longitude);
+//
+//
+//    }
 
     private void calculateDistance(LatLng customerLatLng, LatLng driverLatLng) {
         if (customerLatLng == null || driverLatLng == null) {
@@ -552,7 +589,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         }
     }
 
-    private Circle mUserLocationCircle;
+
     private boolean hasMovedCamera = false;
 
     @SuppressLint("MissingPermission")

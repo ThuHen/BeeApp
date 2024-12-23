@@ -11,13 +11,13 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:padding="10dp"
+        android:padding="20dp"
         android:id="@+id/txt_email"
         android:hint="@string/email"/>
     <EditText
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:padding="10dp"
+        android:padding="20dp"
         android:id="@+id/txt_password"
         android:hint="@string/password"/>
 

@@ -47,6 +47,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -72,8 +73,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private LatLng destinationLocation;
     private Marker destinationMarker;
     private LatLng customerLatLng;
+    private int status = 0;
     private Double routeDistance = (double) -1;
     private Marker pickupMarker;
+    private Button mRideStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +121,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         customerName = findViewById(R.id.customer_name);
         customerPhone = findViewById(R.id.customer_phone);
         customerDestination = findViewById(R.id.customer_Destination);
+        mRideStatus = findViewById(R.id.btn_ride_status);
         mSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -127,6 +131,47 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 return;
             }
         });
+        mRideStatus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (customerId == "") {
+                    Toast.makeText(DriverMapActivity.this, R.string.no_customer, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                switch (status) {
+                    case 1:
+                        mRideStatus.setText(R.string.end_ride);
+                        status = 2;
+
+                        break;
+
+                    case 2:
+                        recordRide();
+                        endRide();
+                        break;
+                }
+
+            }
+        });
+    }
+
+    private void recordRide() {
+        String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Drivers").child(driverId).child("history");
+        DatabaseReference customerRef = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Customers").child(customerId).child("history");
+        DatabaseReference historyRef = FirebaseDatabase.getInstance().getReference()
+                .child("history");
+        String historyId = historyRef.push().getKey();// lấy id duy nhất
+        driverRef.child(historyId).setValue(true);
+        customerRef.child(historyId).setValue(true);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("driverId", driverId);
+        map.put("customerId", customerId);
+        map.put("rating", 0);
+        historyRef.child(historyId).updateChildren(map);
+
     }
 
 
@@ -139,42 +184,26 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         String driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         // Lấy thông tin tài xế này từ Firebase
         DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
-                .child("Users").child("Drivers").child(driverId);
+                .child("Users").child("Drivers").child(driverId).child("customerRequest").child("customerRideId");
         // Lắng nghe sự thay đổi của thông tin tài xế
         assignedCustomerRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // Nếu tài xế đã nhận yêu cầu từ khách hàng
-                if (snapshot.exists() && snapshot.hasChild("customerRequest")) {
-                    // Kiểm tra xem customerRequest có chứa customerRideId không
-                    if (snapshot.child("customerRequest").hasChild("customerRideId")) {
-                        // Lấy ID của khách hàng từ customerRideId
-                        customerId = Objects.requireNonNull(snapshot.child("customerRequest").child("customerRideId").getValue()).toString();
-                        Log.d(TAG, "Assigned customer ID: " + customerId);
-
-                        // Lấy vị trí của khách hàng
-                        if (getAssignedCustomerPickupLocation()) {
-                            // chuyển trạng thái driver: available -> working
-                            changeDriverStatusToWorking();
-                            getAssignedCustomerDestination();
-                            getAssignedCustomerPickupInfo();
-                        }
-
-                    } else {
-                        Log.d(TAG, "customerRequest exists, but no customerRideId found.");
+                if (snapshot.exists()) {
+                    status = 1;
+                    // Lấy ID của khách hàng từ customerRideId
+                    customerId = snapshot.getValue().toString();
+                    Log.d(TAG, "Assigned customer ID: " + customerId);
+                    // Lấy vị trí của khách hàng
+                    if (getAssignedCustomerPickupLocation()) {
+                        // chuyển trạng thái driver: available -> working
+                        changeDriverStatusToWorking();
+                        getAssignedCustomerDestination();
+                        getAssignedCustomerPickupInfo();
                     }
-
                 } else {
-                    hideCustomerInfoUI();
-                    Log.w(TAG, "getAssignedCustomer: No assigned customer found");
-                    customerId = ""; // Reset customerId
-                    if (pickupMarker != null)
-                        pickupMarker.remove();
-                    if (destinationMarker != null)
-                        destinationMarker.remove();
-                    // Nếu có listener từ  customerRequest, xóa nó
-                    if (assignedCustomerPickupLocationListener != null)
-                        assignedCustomerPickupLocationRef.removeEventListener(assignedCustomerPickupLocationListener);
+                    endRide();
                 }
             }
 
@@ -183,6 +212,28 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 Log.e(TAG, "getAssignedCustomer: Error fetching assigned customer: " + error.getMessage());
             }
         });
+
+    }
+
+    private void endRide() {
+        String driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Drivers").child(driverId).child("customerRequest");
+        driverRef.removeValue();
+
+        Log.d(TAG, "mRequestonClick: driverRef.setValue(true)");
+        mRideStatus.setText(R.string.pickup_customer);
+        hideCustomerInfoUI();
+        Log.w(TAG, "getAssignedCustomer: No assigned customer found");
+        customerId = ""; // Reset customerId
+        if (pickupMarker != null)
+            pickupMarker.remove();
+        if (destinationMarker != null)
+            destinationMarker.remove();
+        // Nếu có listener từ  customerRequest, xóa nó
+        if (assignedCustomerPickupLocationListener != null)
+            assignedCustomerPickupLocationRef.removeEventListener(assignedCustomerPickupLocationListener);
+
 
     }
 

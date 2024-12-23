@@ -21,6 +21,9 @@
         android:theme="@style/Theme.BeeApp"
         tools:targetApi="31">
         <activity
+            android:name=".HistoryActivity"
+            android:exported="false" />
+        <activity
             android:name=".DriverSettingActivity"
             android:exported="false" />
         <activity

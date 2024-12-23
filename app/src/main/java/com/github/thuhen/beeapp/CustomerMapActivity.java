@@ -55,6 +55,7 @@ import java.util.Objects;
 public class CustomerMapActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private ActivityCustomerMapBinding binding;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
@@ -133,6 +134,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
             }
         });
+        mRequest = findViewById(R.id.button_call_request);
         mRequest.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("MissingPermission")
             @Override

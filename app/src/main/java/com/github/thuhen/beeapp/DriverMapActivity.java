@@ -185,6 +185,15 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         map.put("customerId", customerId);
         map.put("rating", 0);
         map.put("timestamp", getCurrentTimestamp());
+//        map.put("destination", destinationLocation);
+        Map<String, Double> destinationMap = new HashMap<>();
+        destinationMap.put("latitude", destinationLocation.latitude);
+        destinationMap.put("longitude", destinationLocation.longitude);
+        map.put("destination", destinationMap);
+        map.put("location/from/lat", customerLatLng.latitude);
+        map.put("location/from/long", customerLatLng.longitude);
+        map.put("location/to/lat", destinationLocation.latitude);
+        map.put("location/to/long", destinationLocation.longitude);
         historyRef.child(historyId).updateChildren(map);
 
     }

@@ -2,6 +2,7 @@ package com.github.thuhen.beeapp;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.text.format.DateFormat;
 import android.util.Log;
 
 import androidx.activity.EdgeToEdge;
@@ -12,6 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 
 import com.github.thuhen.beeapp.HistoryRecycleView.HistoryAdapter;
 import com.github.thuhen.beeapp.HistoryRecycleView.HistoryObject;
@@ -104,7 +107,13 @@ public class HistoryActivity extends AppCompatActivity {
                 if (snapshot.exists()) {
                     Log.d("HistoryActivity", "Ride found: " + snapshot.getValue());
                     String rideId = snapshot.getKey();
-                    HistoryObject obj = new HistoryObject(rideId);
+                    Long timestamp= 0L;
+                    for (DataSnapshot child : snapshot.getChildren()){
+                        if (child.getKey().equals("timestamp")){
+                            timestamp= Long.valueOf(child.getValue().toString());
+                        }
+                    }
+                    HistoryObject obj = new HistoryObject(rideId,getDate(timestamp));
                     resultHistory.add(obj);
                     mHistoryAdapter.notifyDataSetChanged();
                 } else {
@@ -117,6 +126,13 @@ public class HistoryActivity extends AppCompatActivity {
                 Log.e("HistoryActivity", "Database error: " + error.getMessage());
             }
         });
+    }
+
+    private String getDate(Long timestamp){
+        Calendar cal= Calendar.getInstance(Locale.getDefault());
+        cal.setTimeInMillis(timestamp*1000);
+        String date = DateFormat.format("dd-MM-yyyy hh:mm",cal).toString();
+        return date;
     }
 
     private ArrayList<HistoryObject> getDataSetHistory() {

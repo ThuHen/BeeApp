@@ -157,7 +157,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     case 1:
                         mRideStatus.setText(R.string.end_ride);
                         status = 2;
-
                         break;
 
                     case 2:
@@ -185,8 +184,14 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         map.put("driverId", driverId);
         map.put("customerId", customerId);
         map.put("rating", 0);
+        map.put("timestamp", getCurrentTimestamp());
         historyRef.child(historyId).updateChildren(map);
 
+    }
+
+    private Long  getCurrentTimestamp(){
+        Long timestamp = System.currentTimeMillis()/1000;
+        return timestamp;
     }
 
 

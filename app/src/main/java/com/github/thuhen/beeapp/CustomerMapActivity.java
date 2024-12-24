@@ -25,7 +25,6 @@ import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
 import com.github.thuhen.beeapp.databinding.ActivityCustomerMapBinding;
-import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -36,14 +35,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.libraries.places.api.model.TypeFilter;
-import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
-import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -52,21 +47,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.android.libraries.places.api.Places;
-import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
-import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
-import com.google.android.gms.common.api.Status;
-import com.google.android.libraries.places.api.model.Place;
-
 public class CustomerMapActivity extends FragmentActivity implements OnMapReadyCallback {
-
     private GoogleMap mMap;
+    private ActivityCustomerMapBinding binding;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
@@ -74,6 +62,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Button mRequest;
     private Button mLogout;
     private Button mSetting;
+    private Button mHistory;
     //vi tri đón khách nay
     private LatLng pickupLocation;
     private Marker pickupMarker;
@@ -87,8 +76,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "CustomerMapActivity"; // Tag dùng trong Logcat
     private Boolean requestBol = false;
-//    private AutocompleteSupportFragment autocompleteFragment;
-    //private String destination;
 
 
     @Override
@@ -119,22 +106,16 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         driverPhone = findViewById(R.id.driver_phone);
         driverCar = findViewById(R.id.driver_car);
         mLogout = (Button) findViewById(R.id.logout);
-        if (mLogout == null) {
-            Log.e("Error", "mLogout không được ánh xạ chính xác!");
-            return;
-        }
         mRequest = findViewById(R.id.button_call_request);
-        if (mRequest == null) {
-            Log.e("Error", "mRequest không được ánh xạ chính xác!");
-            return;
-        }
+        mSetting = (Button) findViewById(R.id.setting);
+        mHistory = (Button) findViewById(R.id.history);
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "mLogout clicked: Removing location updates");
                 stopLocationUpdates();
+                //endRide();
 
-                deleteLocationOnFirebase();
                 FirebaseAuth.getInstance().signOut();
                 Intent intent = new Intent(CustomerMapActivity.this, MainActivity.class);
                 startActivity(intent);
@@ -143,6 +124,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
             }
         });
+
         mRequest.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("MissingPermission")
             @Override
@@ -195,11 +177,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 }
             }
         });
-        mSetting = (Button) findViewById(R.id.setting);
-        if (mSetting == null) {
-            Log.e("Error", "mSetting không được ánh xạ chính xác!");
-            return;
-        }
+
         mSetting.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -209,6 +187,17 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             }
 
         });
+        mHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "mHistory onClick: ");
+                Intent intent = new Intent(CustomerMapActivity.this, HistoryActivity.class);
+                intent.putExtra("customerOrDriver", "Customers");
+                startActivity(intent);
+                return;
+            }
+        });
+
 //        //Khởi tạo Google Places API
 //        if (!Places.isInitialized()) {
 //            Places.initialize(getApplicationContext(), getString(R.string.maps_api_key));
@@ -708,36 +697,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
     }
 
-    public void deleteLocationOnFirebase() {
-        // Xóa vị trí của người dùng khỏi Firebase
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-            DatabaseReference userLocationRef = FirebaseDatabase.getInstance().getReference("driverAvailable");
-            GeoFire geoFire = new GeoFire(userLocationRef);
 
-            geoFire.removeLocation(userId, (key, error) -> {
-                if (error != null) {
-                    Log.e(TAG, "Failed to remove location: " + error.getMessage());
-                } else {
-                    Log.d(TAG, "Location successfully removed for userId: " + userId);
-                }
-            });
-            Log.d(TAG, "deleteLocationOnFirebase:Xóa vị trí của người dùng khỏi Firebase");
-
-        } else {
-            Log.e(TAG, "deleteLocationOnFirebase: deleted location, user logOut");
-            return;
-        }
-
-    }
 
     @Override
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "onStop:");
         stopLocationUpdates();
-        deleteLocationOnFirebase();
+
     }
 }
 

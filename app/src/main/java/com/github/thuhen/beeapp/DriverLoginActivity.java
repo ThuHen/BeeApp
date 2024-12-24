@@ -91,7 +91,7 @@ public class DriverLoginActivity extends AppCompatActivity {
                                     .getReference().child("Users").child("Drivers")
                                     .child(user_id).child("name");
                             current_user_db.setValue(email);
-                           // current_user_db.setValue(true);
+                           //@gmail.com current_user_db.setValue(true);
                             Toast.makeText(DriverLoginActivity.this, R.string.sign_up_sucessful,
                                     Toast.LENGTH_SHORT).show();
                         }

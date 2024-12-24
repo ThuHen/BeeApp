@@ -1,17 +1,15 @@
 package com.github.thuhen.beeapp;
 
-import android.media.AudioRouting;
+
 import android.os.Bundle;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -23,7 +21,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.bumptech.glide.Glide;
 
 
 import java.util.Calendar;
@@ -32,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class HistorySingleActivity extends AppCompatActivity implements OnMapReadyCallback {
+    private String TAG = "HistorySingleActivity";
     private String rideId, currentUserId, customerId, driverId, userDriverOrCustomer;
 
     private TextView rideLocation;
@@ -46,6 +44,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
     private LatLng destinationLatLng, pickupLatLng;
     private GoogleMap mMap;
     private SupportMapFragment mMapFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,34 +74,48 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
         historyRideInfoDb.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
-                    for(DataSnapshot child:snapshot.getChildren()){
-                        if(child.getKey().equals("customer")){
-                            customerId= child.getValue().toString();
-                            if(!customerId.equals(currentUserId)){
-                                userDriverOrCustomer = "Drivers";
-                                getUserInformation("Customers", customerId);
-                            }
-                        }
-                        if(child.getKey().equals("driver")){
-                            driverId= child.getValue().toString();
-                            if(!driverId.equals(currentUserId)){
+                if (snapshot.exists()) {
+                    for (DataSnapshot child : snapshot.getChildren()) {
+                        //get customerId
+                        if (child.getKey().equals("customerId")) {
+                            Log.d(TAG, "onDataChange: customerId: ");
+                            customerId = child.getValue().toString();
+                            if (customerId.equals(currentUserId)) {
                                 userDriverOrCustomer = "Customers";
-                                getUserInformation("Drivers", driverId);
+                                getUserInformation(userDriverOrCustomer, customerId);
+
                             }
+
                         }
-                        if(child.getKey().equals("timestamp")){
+                        //get driverId
+                        if (child.getKey().equals("driverId")) {
+                            Log.d(TAG, "onDataChange: driverId: ");
+                            driverId = child.getValue().toString();
+                            if (driverId.equals(currentUserId)) {
+                                userDriverOrCustomer = "Drivers";
+                                getUserInformation(userDriverOrCustomer, driverId);
+                            }
+
+                        }
+
+                        if (child.getKey().equals("timestamp")) {
                             rideDate.setText(getDate(Long.valueOf(child.getValue().toString())));
                         }
-                        if(child.getKey().equals("destination")){
-                            rideLocation.setText(getDate(Long.valueOf(child.getValue().toString())));
+                        if (child.getKey().equals("destination")) {
+                            String latitude = child.child("latitude").getValue().toString();
+                            String longitude = child.child("longitude").getValue().toString();
+
+                            // Kết hợp latitude và longitude thành chuỗi tọa độ
+                            String coordinates = "Latitude: " + latitude + "\n" + "Longitude: " + longitude;
+                            rideLocation.setText(coordinates); // Hiển thị tọa độ lên TextView
                         }
-                        if(child.getKey().equals("destination")){
-                            pickupLatLng = new LatLng(Double.valueOf(child.child("from").child("lat").getValue().toString()), Double.valueOf(child.child("from").child("lng").getValue().toString()));
-                            destinationLatLng = new LatLng(Double.valueOf(child.child("to").child("lat").getValue().toString()), Double.valueOf(child.child("to").child("lng").getValue().toString()));
-//                            if(destinationLatLng!=new LatLng(0,0)){
-//
-//                            }
+
+
+                        if (child.getKey().equals("location")) {
+                            pickupLatLng = new LatLng(Double.valueOf(child.child("from")
+                                    .child("lat").getValue().toString()), Double.valueOf(child.child("from").child("long").getValue().toString()));
+                            destinationLatLng = new LatLng(Double.valueOf(child.child("to")
+                                    .child("lat").getValue().toString()), Double.valueOf(child.child("to").child("long").getValue().toString()));
 
                         }
                     }
@@ -117,21 +130,25 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
     }
 
     private void getUserInformation(String otherUserDriverOrCustomer, String otherUserId) {
-        DatabaseReference mOtherUserDB = FirebaseDatabase.getInstance().getReference().child("Users").child(otherUserDriverOrCustomer).child(otherUserId);
+        DatabaseReference mOtherUserDB = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child(otherUserDriverOrCustomer).child(otherUserId);
         mOtherUserDB.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
+                if (snapshot.exists()) {
                     Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
-                    if(map.get("name")!=null){
+                    assert map != null;
+                    if (map.get("name") != null) {
                         userName.setText(map.get("name").toString());
                     }
-                    if(map.get("phone")!=null){
+                    if (map.get("phone") != null) {
                         userName.setText(map.get("phone").toString());
                     }
-                    if(map.get("profileImageUrl")!=null){
-                        Glide.with(getApplication()).load(map.get("profileImageUrl").toString()).into(userImage);
-                    }
+                    if (otherUserDriverOrCustomer.equals("Drivers"))
+                        userImage.setImageResource(R.mipmap.icon_default_driver);
+                    if (otherUserDriverOrCustomer.equals("Customers"))
+                        userImage.setImageResource(R.mipmap.icon_default_user);
+
                 }
             }
 
@@ -142,15 +159,16 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
         });
     }
 
-    private String getDate(Long timestamp){
-        Calendar cal= Calendar.getInstance(Locale.getDefault());
-        cal.setTimeInMillis(timestamp*1000);
-        String date = DateFormat.format("dd-MM-yyyy hh:mm",cal).toString();
+    private String getDate(Long timestamp) {
+        Calendar cal = Calendar.getInstance(Locale.getDefault());
+        cal.setTimeInMillis(timestamp * 1000);
+        String date = DateFormat.format("dd-MM-yyyy hh:mm", cal).toString();
         return date;
     }
+
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
-        mMap=googleMap;
+        mMap = googleMap;
     }
 
 }

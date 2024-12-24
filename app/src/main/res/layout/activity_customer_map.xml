@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- RelativeLayout chứa các nút và CardView -->
+    <!-- RelativeLayout chứa các nút  -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -24,28 +24,28 @@
             android:id="@+id/buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-        <!-- Nút Logout -->
-        <Button
-            android:id="@+id/logout"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/log_out" />
-        <!-- Nút History -->
-        <Button
-            android:id="@+id/history"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/history_button" />
+            <!-- Nút Logout -->
+            <Button
+                android:id="@+id/logout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/log_out" />
+            <!-- Nút History -->
+            <Button
+                android:id="@+id/history"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/history_button" />
 
 
             <!-- Nút Settings -->
             <Button
                 android:id="@+id/setting"
-                android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="@string/setting_button" />
         </LinearLayout>
 
@@ -55,8 +55,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_gravity="bottom">
+        android:layout_gravity="bottom"
+        android:orientation="vertical">
+
         <LinearLayout
             android:id="@+id/driver_info"
             android:layout_width="match_parent"
@@ -103,7 +104,6 @@
             </LinearLayout>
 
         </LinearLayout>
-
 
 
         <!-- Nút gọi ở dưới cùng màn hình -->

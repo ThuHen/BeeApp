@@ -67,6 +67,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private static final String TAG = "DriverMapActivity"; // Tag dùng trong Logcat
     private Button mLogout;
     private Button mSettings;
+    private Button mHistory;
     private LinearLayout mCustomerInfor;
     private ImageView customerProfileImage;
     private TextView customerName;
@@ -102,6 +103,15 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         getUserLocation();
         getAssignedCustomer();
         mLogout = (Button) findViewById(R.id.logout);
+
+        mSettings = findViewById(R.id.settings);
+        mCustomerInfor = findViewById(R.id.customer_infor);
+        customerProfileImage = findViewById(R.id.customer_profile_image);
+        customerName = findViewById(R.id.customer_name);
+        customerPhone = findViewById(R.id.customer_phone);
+        customerDestination = findViewById(R.id.customer_Destination);
+        mRideStatus = findViewById(R.id.btn_ride_status);
+        mHistory = (Button) findViewById(R.id.history);
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -117,19 +127,22 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             }
         });
-        mSettings = findViewById(R.id.settings);
-        mCustomerInfor = findViewById(R.id.customer_infor);
-        customerProfileImage = findViewById(R.id.customer_profile_image);
-        customerName = findViewById(R.id.customer_name);
-        customerPhone = findViewById(R.id.customer_phone);
-        customerDestination = findViewById(R.id.customer_Destination);
-        mRideStatus = findViewById(R.id.btn_ride_status);
         mSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(DriverMapActivity.this, DriverSettingActivity.class);
                 startActivity(intent);
                 //finish();
+                return;
+            }
+        });
+        mHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "mHistory onClick: ");
+                Intent intent = new Intent(DriverMapActivity.this, HistoryActivity.class);
+                intent.putExtra("customerOrDriver", "Drivers");
+                startActivity(intent);
                 return;
             }
         });

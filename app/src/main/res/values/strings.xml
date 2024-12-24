@@ -24,7 +24,7 @@
     <string name="driver_is_here">The driver is here</string>
     <string name="no_driver_found">Không có tài xế nào gần bạn</string>
     <string name="setting_button">Setting</string>
-    <string name="history_button">Setting</string>
+    <string name="history_button">History</string>
     <string name="name_setting">Name</string>
     <string name="phone_setting">Phone</string>
     <string name="confirm_setting">Confirm</string>

@@ -20,20 +20,34 @@
         android:layout_margin="16dp"
         android:elevation="10dp">
 
+        <LinearLayout
+            android:id="@+id/buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
         <!-- Nút Logout -->
         <Button
             android:id="@+id/logout"
-            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/log_out" />
-
-        <!-- Nút Settings -->
+        <!-- Nút History -->
         <Button
-            android:id="@+id/setting"
-            android:layout_width="wrap_content"
+            android:id="@+id/history"
+            android:layout_weight="1"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:text="@string/setting_button" />
+            android:text="@string/history_button" />
+
+
+            <!-- Nút Settings -->
+            <Button
+                android:id="@+id/setting"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/setting_button" />
+        </LinearLayout>
 
     </RelativeLayout>
 

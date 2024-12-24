@@ -25,7 +25,6 @@ import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
 import com.github.thuhen.beeapp.databinding.ActivityCustomerMapBinding;
-import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -36,14 +35,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.libraries.places.api.model.TypeFilter;
-import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
-import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -52,21 +47,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.android.libraries.places.api.Places;
-import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
-import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
-import com.google.android.gms.common.api.Status;
-import com.google.android.libraries.places.api.model.Place;
-
 public class CustomerMapActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private ActivityCustomerMapBinding binding;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
@@ -74,6 +63,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Button mRequest;
     private Button mLogout;
     private Button mSetting;
+    private Button mHistory;
+
     //vi tri đón khách nay
     private LatLng pickupLocation;
     private Marker pickupMarker;
@@ -143,6 +134,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
             }
         });
+        mRequest = findViewById(R.id.button_call_request);
         mRequest.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("MissingPermission")
             @Override
@@ -209,6 +201,17 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             }
 
         });
+        mHistory = (Button) findViewById(R.id.history);
+        mHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(CustomerMapActivity.this, HistoryActivity.class);
+                intent.putExtra("customerOrDriver","Customer");
+                startActivity(intent);
+                return;
+            }
+        });
+
 //        //Khởi tạo Google Places API
 //        if (!Places.isInitialized()) {
 //            Places.initialize(getApplicationContext(), getString(R.string.maps_api_key));

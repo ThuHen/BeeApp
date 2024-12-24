@@ -45,6 +45,10 @@ dependencies {
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-database")
+//    implementation ("com.google.firebase:firebase-database:20.2.2")
+    implementation("com.firebase:geofire-android:3.2.0")
+
+//    implementation ("com.firebase:geofire-java:3.0.0")
     // Full GeoFire library for Realtime Database users
     implementation ("com.firebase:geofire-android:3.2.0")
 
@@ -52,8 +56,9 @@ dependencies {
     // want to implement their own geo solution, see:
     // https://firebase.google.com/docs/firestore/solutions/geoqueries
     implementation ("com.firebase:geofire-android-common:3.2.0")
-    //
-    implementation ("com.google.android.libraries.places:places:3.1.0")
+//    implementation ("com.google.android.gms:play-services-location:21.0.1")
+
+
 
     implementation(libs.appcompat)
     implementation(libs.material)

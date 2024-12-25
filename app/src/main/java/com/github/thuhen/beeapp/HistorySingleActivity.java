@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -86,8 +87,9 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                             Log.d(TAG, "onDataChange: customerId: ");
                             customerId = child.getValue().toString();
                             if (customerId.equals(currentUserId)) {
-                                userDriverOrCustomer = "Customers";
-                                getUserInformation(userDriverOrCustomer, customerId);
+                                userDriverOrCustomer = "Drivers";
+                                getUserInformation(userDriverOrCustomer, driverId);
+                                displayCustomerRelatedObjects();
 
                             }
 
@@ -97,9 +99,9 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                             Log.d(TAG, "onDataChange: driverId: ");
                             driverId = child.getValue().toString();
                             if (driverId.equals(currentUserId)) {
-                                userDriverOrCustomer = "Drivers";
-                                getUserInformation(userDriverOrCustomer, driverId);
-                                displayCustomerRelatedObjects();
+                                userDriverOrCustomer = "Customers";
+                                getUserInformation(userDriverOrCustomer, customerId);
+
                             }
 
                         }
@@ -140,15 +142,45 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
 
     private void displayCustomerRelatedObjects() {
         mRatingBar.setVisibility(View.VISIBLE);
-        mRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-            @Override
-            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                historyRideInfoDb.child("rating").setValue(rating);
-                DatabaseReference mDriverRatingDb = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("rating");
-                mDriverRatingDb.child(rideId).setValue(rating);
-            }
+        mRatingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            if (!fromUser) return; // Chỉ xử lý khi người dùng thay đổi giá trị
+
+            // Tham chiếu Firebase để lấy giá trị hiện tại của rating
+            DatabaseReference mDriverRatingDb = FirebaseDatabase.getInstance().getReference()
+                    .child("Users").child("Drivers").child(driverId).child("rating").child(rideId);
+
+            mDriverRatingDb.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        // Nếu rating đã tồn tại, kiểm tra giá trị
+                        Float existingRating = snapshot.getValue(Float.class);
+                        if (existingRating != null && existingRating == 0) {
+                            // Giá trị rating là 0
+                            Toast.makeText(HistorySingleActivity.this, "Cảm ơn bạn đã đánh giá!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Giá trị rating khác 0
+                            Toast.makeText(HistorySingleActivity.this, "Bạn đã sửa đánh giá của mình!", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        // Nếu rating chưa tồn tại
+                        Toast.makeText(HistorySingleActivity.this, "Cảm ơn bạn đã đánh giá!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    // Lưu giá trị rating mới vào Firebase
+                    historyRideInfoDb.child("rating").setValue(rating);
+                    mDriverRatingDb.setValue(rating);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    // Xử lý lỗi nếu không truy vấn được Firebase
+                    Toast.makeText(HistorySingleActivity.this, "Đã xảy ra lỗi, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
+                }
+            });
         });
     }
+
 
     private void getUserInformation(String otherUserDriverOrCustomer, String otherUserId) {
         DatabaseReference mOtherUserDB = FirebaseDatabase.getInstance().getReference()
@@ -163,7 +195,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                         userName.setText(map.get("name").toString());
                     }
                     if (map.get("phone") != null) {
-                        userName.setText(map.get("phone").toString());
+                        userPhone.setText(map.get("phone").toString());
                     }
                     if (otherUserDriverOrCustomer.equals("Drivers"))
                         userImage.setImageResource(R.mipmap.icon_default_driver);

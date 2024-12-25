@@ -448,12 +448,12 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     int ratingSum = 0;
                     float ratingsTotal = 0;
                     float ratingsAvg = 0;
-                    for(DataSnapshot child:snapshot.child("rating").getChildren()){
+                    for (DataSnapshot child : snapshot.child("rating").getChildren()) {
                         ratingSum = ratingSum + Integer.valueOf(child.getValue().toString());
                         ratingsTotal++;
                     }
-                    if(ratingsTotal!=0){
-                        ratingsAvg = ratingSum/ratingsTotal;
+                    if (ratingsTotal != 0) {
+                        ratingsAvg = ratingSum / ratingsTotal;
                         mRatingBar.setRating(ratingsAvg);
                     }
                 } else
@@ -743,7 +743,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
 
     }
-
 
 
     @Override

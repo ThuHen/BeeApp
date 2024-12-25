@@ -1,20 +1,11 @@
 package com.github.thuhen.beeapp;
 
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.icu.text.SimpleDateFormat;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -27,15 +18,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public class CustomerSettingActivity extends AppCompatActivity {
@@ -44,7 +28,7 @@ public class CustomerSettingActivity extends AppCompatActivity {
     private String mName;
     private String mPhone;
     private Button mConfirm;
-    private Button mBack;
+
     private ImageView mProfileImage;
     private DatabaseReference mCustomerDatabase;
     private FirebaseAuth mAuth;
@@ -53,7 +37,7 @@ public class CustomerSettingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+//        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_customer_setting);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -64,7 +48,7 @@ public class CustomerSettingActivity extends AppCompatActivity {
         mNameField = findViewById(R.id.setting_name);
         mPhoneField = findViewById(R.id.setting_phone);
         mConfirm = findViewById(R.id.setting_confirm);
-        mBack = findViewById(R.id.setting_back);
+
         mAuth = FirebaseAuth.getInstance();
         userId = mAuth.getCurrentUser().getUid();
         mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Customers").child(userId);
@@ -72,10 +56,7 @@ public class CustomerSettingActivity extends AppCompatActivity {
         mConfirm.setOnClickListener(view -> {
             saveUserInformation();
         });
-        mBack.setOnClickListener(view -> {
-            finish();
-            return;
-        });
+
         mProfileImage.setOnClickListener(view -> {
 //            openImagePicker();
 
@@ -131,6 +112,7 @@ public class CustomerSettingActivity extends AppCompatActivity {
             }
         });
     }
+
     private void saveUserInformation() {
         mName = mNameField.getText().toString();
         mPhone = mPhoneField.getText().toString();

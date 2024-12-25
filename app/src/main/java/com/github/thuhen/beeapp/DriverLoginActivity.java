@@ -2,12 +2,10 @@ package com.github.thuhen.beeapp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -16,13 +14,11 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.Firebase;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.FirebaseDatabaseKtxRegistrar;
 
 import java.util.Objects;
 
@@ -36,7 +32,7 @@ public class DriverLoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+//        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_login);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -91,11 +87,12 @@ public class DriverLoginActivity extends AppCompatActivity {
                                     .getReference().child("Users").child("Drivers")
                                     .child(user_id).child("name");
                             current_user_db.setValue(email);
-                           //@gmail.com current_user_db.setValue(true);
+                            //@gmail.com current_user_db.setValue(true);
                             Toast.makeText(DriverLoginActivity.this, R.string.sign_up_sucessful,
                                     Toast.LENGTH_SHORT).show();
                         }
                     });
+
 
         });
 

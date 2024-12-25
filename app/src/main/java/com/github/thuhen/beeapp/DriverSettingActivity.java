@@ -9,7 +9,6 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -36,7 +35,7 @@ public class DriverSettingActivity extends AppCompatActivity {
     private String mPhone;
     private String mCar;
     private Button mConfirm;
-    private Button mBack;
+
     private ImageView mProfileImage;
     private DatabaseReference mDriverDatabase;
     private FirebaseAuth mAuth;
@@ -48,7 +47,7 @@ public class DriverSettingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+//        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_driver_setting);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -61,7 +60,7 @@ public class DriverSettingActivity extends AppCompatActivity {
         mCarField = findViewById(R.id.setting_car);
         mRadioGroup= findViewById(R.id.radioGroup);
         mConfirm = findViewById(R.id.setting_confirm);
-        mBack = findViewById(R.id.setting_back);
+
         mAuth = FirebaseAuth.getInstance();
         userId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
         mDriverDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId);
@@ -69,10 +68,7 @@ public class DriverSettingActivity extends AppCompatActivity {
         mConfirm.setOnClickListener(view -> {
             saveUserInformation();
         });
-        mBack.setOnClickListener(view -> {
-            finish();
-            return;
-        });
+
         mProfileImage.setOnClickListener(view -> {
 //            openImagePicker();
         });

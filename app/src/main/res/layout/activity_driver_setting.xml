@@ -67,13 +67,7 @@
         android:layout_marginRight="15sp"
         android:text="@string/confirm_setting" />
 
-    <Button
-        android:id="@+id/setting_back"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="15sp"
-        android:layout_marginRight="15sp"
-        android:text="@string/confirm_back" />
+
 
 
 </LinearLayout>

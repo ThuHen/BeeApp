@@ -2,4 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="honey_yellow">#FFCC00</color> <!-- Màu vàng ong -->
+    <color name="honey_milk_yellow">#FAF0CB</color> <!-- Màu vàng ong pha sữa -->
+    <color name="button_border_color">#090600</color> <!-- Màu viền cho Button -->
 </resources>

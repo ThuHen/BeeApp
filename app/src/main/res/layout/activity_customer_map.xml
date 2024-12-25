@@ -30,14 +30,16 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/log_out" />
+                android:text="@string/log_out"
+                android:layout_margin="5dp"/>
             <!-- Nút History -->
             <Button
                 android:id="@+id/history"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/history_button" />
+                android:text="@string/history_button"
+                android:layout_margin="5dp"/>
 
 
             <!-- Nút Settings -->
@@ -46,7 +48,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/setting_button" />
+                android:text="@string/setting_button"
+                android:layout_margin="5dp"/>
         </LinearLayout>
 
     </RelativeLayout>

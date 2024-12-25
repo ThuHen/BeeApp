@@ -10,7 +10,6 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -29,7 +28,6 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 public class HistorySingleActivity extends AppCompatActivity implements OnMapReadyCallback {
     private String TAG = "HistorySingleActivity";
@@ -86,11 +84,9 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                         if (child.getKey().equals("customerId")) {
                             Log.d(TAG, "onDataChange: customerId: ");
                             customerId = child.getValue().toString();
-                            if (customerId.equals(currentUserId)) {
-                                userDriverOrCustomer = "Drivers";
-                                getUserInformation(userDriverOrCustomer, driverId);
-                                displayCustomerRelatedObjects();
-
+                            if (!customerId.equals(currentUserId)) {
+                                userDriverOrCustomer = "Customers";
+                                getUserInformation(userDriverOrCustomer, customerId);
                             }
 
                         }
@@ -98,12 +94,11 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                         if (child.getKey().equals("driverId")) {
                             Log.d(TAG, "onDataChange: driverId: ");
                             driverId = child.getValue().toString();
-                            if (driverId.equals(currentUserId)) {
-                                userDriverOrCustomer = "Customers";
-                                getUserInformation(userDriverOrCustomer, customerId);
-
+                            if (!driverId.equals(currentUserId)) {
+                                userDriverOrCustomer = "Drivers";
+                                getUserInformation(userDriverOrCustomer, driverId);
+                                displayCustomerRelatedObjects();
                             }
-
                         }
 
                         if (child.getKey().equals("timestamp")) {

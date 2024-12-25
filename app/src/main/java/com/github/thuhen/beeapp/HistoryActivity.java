@@ -5,10 +5,8 @@ import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,7 +16,6 @@ import java.util.Locale;
 
 import com.github.thuhen.beeapp.HistoryRecycleView.HistoryAdapter;
 import com.github.thuhen.beeapp.HistoryRecycleView.HistoryObject;
-import com.github.thuhen.beeapp.HistoryRecycleView.HistoryViewHolders;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -38,14 +35,9 @@ public class HistoryActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+//        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_history);
-        // Khởi tạo và set Toolbar
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
-//        // Optional: Set back button (nếu muốn)
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // Khởi tạo RecyclerView
         mHistoryRecyclerView = findViewById(R.id.history_scroll);
@@ -107,13 +99,13 @@ public class HistoryActivity extends AppCompatActivity {
                 if (snapshot.exists()) {
                     Log.d("HistoryActivity", "Ride found: " + snapshot.getValue());
                     String rideId = snapshot.getKey();
-                    Long timestamp= 0L;
-                    for (DataSnapshot child : snapshot.getChildren()){
-                        if (child.getKey().equals("timestamp")){
-                            timestamp= Long.valueOf(child.getValue().toString());
+                    Long timestamp = 0L;
+                    for (DataSnapshot child : snapshot.getChildren()) {
+                        if (child.getKey().equals("timestamp")) {
+                            timestamp = Long.valueOf(child.getValue().toString());
                         }
                     }
-                    HistoryObject obj = new HistoryObject(rideId,getDate(timestamp));
+                    HistoryObject obj = new HistoryObject(rideId, getDate(timestamp));
                     resultHistory.add(obj);
                     mHistoryAdapter.notifyDataSetChanged();
                 } else {
@@ -128,10 +120,10 @@ public class HistoryActivity extends AppCompatActivity {
         });
     }
 
-    private String getDate(Long timestamp){
-        Calendar cal= Calendar.getInstance(Locale.getDefault());
-        cal.setTimeInMillis(timestamp*1000);
-        String date = DateFormat.format("dd-MM-yyyy hh:mm",cal).toString();
+    private String getDate(Long timestamp) {
+        Calendar cal = Calendar.getInstance(Locale.getDefault());
+        cal.setTimeInMillis(timestamp * 1000);
+        String date = DateFormat.format("dd-MM-yyyy hh:mm", cal).toString();
         return date;
     }
 

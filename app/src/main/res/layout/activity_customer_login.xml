@@ -7,19 +7,27 @@
     android:layout_height="match_parent"
     tools:context=".CustomerLoginActivity"
     android:orientation="vertical"
-    android:gravity="center">
+    android:gravity="center"
+    android:layout_margin="30dp"
+   >
     <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="20dp"
         android:id="@+id/txt_email"
-        android:hint="@string/email"/>
-    <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="20dp"
+        android:minHeight="50dp"
+        android:hint="@string/email"
+        android:layout_marginBottom="10dp"
+        android:paddingHorizontal="20dp"
+        />
+
+    <EditText
         android:id="@+id/txt_password"
-        android:hint="@string/password"/>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="50dp"
+        android:hint="@string/password"
+        android:layout_marginBottom="10dp"
+        android:paddingHorizontal="20dp"/>
 
     <Button
             android:layout_width="match_parent"

@@ -43,7 +43,22 @@
         android:background="@null"
         android:hint="@string/car_setting"
         android:padding="10sp" />
-
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <RadioButton
+            android:id="@+id/xeMay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Xe máy"/>
+        <RadioButton
+            android:id="@+id/oTo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ô tô"/>
+    </RadioGroup>
     <Button
         android:id="@+id/setting_confirm"
         android:layout_width="match_parent"

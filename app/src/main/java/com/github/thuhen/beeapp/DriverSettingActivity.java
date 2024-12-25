@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -39,6 +41,8 @@ public class DriverSettingActivity extends AppCompatActivity {
     private DatabaseReference mDriverDatabase;
     private FirebaseAuth mAuth;
     private String userId;
+    private RadioGroup mRadioGroup;
+    private String mService;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -55,6 +59,7 @@ public class DriverSettingActivity extends AppCompatActivity {
         mNameField = findViewById(R.id.setting_name);
         mPhoneField = findViewById(R.id.setting_phone);
         mCarField = findViewById(R.id.setting_car);
+        mRadioGroup= findViewById(R.id.radioGroup);
         mConfirm = findViewById(R.id.setting_confirm);
         mBack = findViewById(R.id.setting_back);
         mAuth = FirebaseAuth.getInstance();
@@ -112,6 +117,16 @@ public class DriverSettingActivity extends AppCompatActivity {
                         mCar = map.get("car").toString();
                         mCarField.setText(mCar);
                     }
+                    if (map.containsKey("service")) {
+                        mService = map.get("service").toString();
+                        switch (mService){
+                            case "Xe máy":
+                                mRadioGroup.check(R.id.xeMay);
+                            case "Ô tô":
+                                mRadioGroup.check(R.id.oTo);
+                                break;
+                        }
+                    }
                 }
             }
 
@@ -129,11 +144,19 @@ public class DriverSettingActivity extends AppCompatActivity {
             Toast.makeText(this, "Tên, số điện thoại và loại xe không được để trống!", Toast.LENGTH_SHORT).show();
             return;
         }
+        int selectedId= mRadioGroup.getCheckedRadioButtonId();
+        final RadioButton radioButton = (RadioButton)  findViewById(selectedId);
+        if (radioButton.getText()==null){
+            return;
+        }
+
+        mService= radioButton.getText().toString();
         // Tạo một Map để lưu thông tin user
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("name", mName);
         userInfo.put("phone", mPhone);
         userInfo.put("car", mCar);
+        userInfo.put("service", mService);
         // Cập nhật thông tin user lên Firebase Database
         mDriverDatabase.updateChildren(userInfo);
 //        if (resultUri != null) {

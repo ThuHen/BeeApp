@@ -17,6 +17,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -78,7 +80,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "CustomerMapActivity"; // Tag dùng trong Logcat
     private Boolean requestBol = false;
-
+    private RadioGroup mRadioGroup;
+    private String requestservice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +110,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         driverName = findViewById(R.id.driver_name);
         driverPhone = findViewById(R.id.driver_phone);
         driverCar = findViewById(R.id.driver_car);
+        mRadioGroup= findViewById(R.id.radioGroup);
+        mRadioGroup.check(R.id.xeMay);
         mLogout = (Button) findViewById(R.id.logout);
         mRequest = findViewById(R.id.button_call_request);
         mSetting = (Button) findViewById(R.id.setting);
@@ -138,6 +143,12 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     return;
                 }
                 if (!requestBol) {
+                    int selectedId= mRadioGroup.getCheckedRadioButtonId();
+                    final RadioButton radioButton = (RadioButton)  findViewById(selectedId);
+                    if (radioButton.getText()==null){
+                        return;
+                    }
+                    requestservice= radioButton.getText().toString();
                     requestBol = true;
                     fusedLocationProviderClient.getLastLocation()
                             .addOnSuccessListener(CustomerMapActivity.this, new OnSuccessListener<Location>() {
@@ -329,29 +340,51 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             public void onKeyEntered(String key, GeoLocation location) {
                 // Nếu tài xế đã được ghép, lấy tọa độ vị trí tài xế
                 if (!driverFound && requestBol) {
-                    driverFound = true;
-                    driverFoundID = key;
-                    Log.e(TAG, "getClosestDriver: Driver ID is " + key);
-                    //vào firebase tài xế gần nhất
-                    DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
-                            .child("Users").child("Drivers").child(driverFoundID).child("customerRequest");
-                    // lấy id customer
-                    String customerID = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+                    DatabaseReference mCustomerDatabase= FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(key);
+                    mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.exists()&& snapshot.getChildrenCount()>0){
+                                Map<String, Object> drivermap = (Map<String, Object>) snapshot.getValue();
+                                if (driverFound){
+                                    return;
+                                }
 
-                    HashMap map = new HashMap();
-                    map.put("customerRideId", customerID);//lưu id customer
-                    Map<String, Double> destinationMap = new HashMap<>();
-                    destinationMap.put("latitude", destinationLocation.latitude);
-                    destinationMap.put("longitude", destinationLocation.longitude);
-                    map.put("destination", destinationMap);
-                    // cập nhật driver
-                    driverRef.updateChildren(map);
-                    // hiện market vị trí tài xế
-                    getDriverLocation();
-                    // Hiển thị thông tin tài xế
-                    getDriverPickupInfo();
-                    mRequest.setText(R.string.looking_for_driver_location);
-                    getHasRiderEnd();
+                                if (drivermap.get("service").equals(requestservice)){
+                                    driverFound = true;
+                                    driverFoundID = key;//
+                                    Log.e(TAG, "getClosestDriver: Driver ID is " + key);
+                                    //vào firebase tài xế gần nhất
+                                    DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference()
+                                            .child("Users").child("Drivers").child(driverFoundID).child("customerRequest");
+                                    // lấy id customer
+                                    String customerID = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+
+                                    HashMap map = new HashMap();
+                                    map.put("customerRideId", customerID);//lưu id customer
+                                    Map<String, Double> destinationMap = new HashMap<>();
+                                    destinationMap.put("latitude", destinationLocation.latitude);
+                                    destinationMap.put("longitude", destinationLocation.longitude);
+                                    map.put("destination", destinationMap);
+                                    // cập nhật driver
+                                    driverRef.updateChildren(map);
+                                    // hiện market vị trí tài xế
+                                    getDriverLocation();
+                                    // Hiển thị thông tin tài xế
+                                    getDriverPickupInfo();
+                                    mRequest.setText(R.string.looking_for_driver_location);
+                                    getHasRiderEnd();
+                                }
+                            }
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+
+
+
 
                 }
             }

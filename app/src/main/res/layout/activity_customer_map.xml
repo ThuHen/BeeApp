@@ -109,17 +109,36 @@
                     android:numStars="5"
                     android:stepSize="0.1"/>
             </LinearLayout>
-
         </LinearLayout>
-
-
-        <!-- Nút gọi ở dưới cùng màn hình -->
-        <Button
-            android:id="@+id/button_call_request"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@android:color/white">
+            <RadioGroup
+                android:id="@+id/radioGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/xeMay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Xe máy"/>
+                <RadioButton
+                    android:id="@+id/oTo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ô tô"/>
+            </RadioGroup>
 
-            android:text="@string/set_destination" />
+            <!-- Nút gọi ở dưới cùng màn hình -->
+            <Button
+                android:id="@+id/button_call_request"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/set_destination" />
+        </LinearLayout>
     </LinearLayout>
 
 </FrameLayout>

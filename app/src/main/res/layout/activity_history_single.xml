@@ -43,7 +43,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20sp"
         android:orientation="horizontal">
         <ImageView
             android:layout_width="100dp"
@@ -71,6 +70,14 @@
         </LinearLayout>
 
     </LinearLayout>
+    <RatingBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/ratingBar"
+        android:layout_gravity="center"
+        android:numStars="5"
+        android:stepSize="1"
+        android:visibility="gone"        />
 
 
 </LinearLayout>

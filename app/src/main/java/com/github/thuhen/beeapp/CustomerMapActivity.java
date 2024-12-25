@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -73,6 +74,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private TextView driverName;
     private TextView driverPhone;
     private TextView driverCar;
+    private RatingBar mRatingBar;
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "CustomerMapActivity"; // Tag dùng trong Logcat
     private Boolean requestBol = false;
@@ -109,6 +111,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         mRequest = findViewById(R.id.button_call_request);
         mSetting = (Button) findViewById(R.id.setting);
         mHistory = (Button) findViewById(R.id.history);
+        mRatingBar = (RatingBar) findViewById(R.id.ratingBar);
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -408,6 +411,17 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     if (map.containsKey("car")) {
                         String mCar = map.get("car").toString();
                         driverCar.setText(mCar);
+                    }
+                    int ratingSum = 0;
+                    float ratingsTotal = 0;
+                    float ratingsAvg = 0;
+                    for(DataSnapshot child:snapshot.child("rating").getChildren()){
+                        ratingSum = ratingSum + Integer.valueOf(child.getValue().toString());
+                        ratingsTotal++;
+                    }
+                    if(ratingsTotal!=0){
+                        ratingsAvg = ratingSum/ratingsTotal;
+                        mRatingBar.setRating(ratingsAvg);
                     }
                 } else
                 // Nếu không tìm thấy tài xế, hiển thị thông báo

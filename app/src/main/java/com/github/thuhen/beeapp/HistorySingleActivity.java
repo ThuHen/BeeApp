@@ -4,7 +4,9 @@ package com.github.thuhen.beeapp;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -39,6 +41,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
     private TextView userPhone;
 
     private ImageView userImage;
+    private RatingBar mRatingBar;
 
     private DatabaseReference historyRideInfoDb;
     private LatLng destinationLatLng, pickupLatLng;
@@ -63,6 +66,8 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
         userPhone = (TextView) findViewById(R.id.userPhone);
 
         userImage = (ImageView) findViewById(R.id.userImage);
+
+        mRatingBar = (RatingBar) findViewById(R.id.ratingBar);
 
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         historyRideInfoDb = FirebaseDatabase.getInstance().getReference().child("history").child(rideId);
@@ -94,12 +99,16 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                             if (driverId.equals(currentUserId)) {
                                 userDriverOrCustomer = "Drivers";
                                 getUserInformation(userDriverOrCustomer, driverId);
+                                displayCustomerRelatedObjects();
                             }
 
                         }
 
                         if (child.getKey().equals("timestamp")) {
                             rideDate.setText(getDate(Long.valueOf(child.getValue().toString())));
+                        }
+                        if (child.getKey().equals("rating")) {
+                            mRatingBar.setRating(Integer.valueOf(child.getValue().toString()));
                         }
                         if (child.getKey().equals("destination")) {
                             String latitude = child.child("latitude").getValue().toString();
@@ -125,6 +134,18 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
+            }
+        });
+    }
+
+    private void displayCustomerRelatedObjects() {
+        mRatingBar.setVisibility(View.VISIBLE);
+        mRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            @Override
+            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+                historyRideInfoDb.child("rating").setValue(rating);
+                DatabaseReference mDriverRatingDb = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("rating");
+                mDriverRatingDb.child(rideId).setValue(rating);
             }
         });
     }

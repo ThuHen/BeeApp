@@ -111,7 +111,6 @@
         android:layout_gravity="center"
         android:numStars="5"
         android:stepSize="1"
-        android:visibility="gone"
         android:layout_margin="10dp"/>
 
 

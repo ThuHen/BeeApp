@@ -91,6 +91,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                             if (!customerId.equals(currentUserId)) {
                                 userDriverOrCustomer = "Customers";
                                 getUserInformation(userDriverOrCustomer, customerId);
+                                mRatingBar.setIsIndicator(true);
                             }
 
                         }
@@ -145,7 +146,6 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
     }
 
     private void displayCustomerRelatedObjects() {
-        mRatingBar.setVisibility(View.VISIBLE);
         mRatingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
             if (!fromUser) return; // Chỉ xử lý khi người dùng thay đổi giá trị
 

@@ -456,6 +456,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     if (ratingsTotal != 0) {
                         ratingsAvg = ratingSum / ratingsTotal;
                         mRatingBar.setRating(ratingsAvg);
+                        mRatingBar.setIsIndicator(true);
                     }
                 } else
                 // Nếu không tìm thấy tài xế, hiển thị thông báo

@@ -69,11 +69,10 @@ public class DriverSettingActivity extends AppCompatActivity {
             saveUserInformation();
         });
 
-        mProfileImage.setOnClickListener(view -> {
-//            openImagePicker();
-        });
+//        mProfileImage.setOnClickListener(view -> {
+////            openImagePicker();
+//        });
     }
-
     //    private Uri resultUri;
 //    // Đăng ký ActivityResultLauncher để chọn ảnh
 //
@@ -118,6 +117,7 @@ public class DriverSettingActivity extends AppCompatActivity {
                         switch (mService){
                             case "Xe máy":
                                 mRadioGroup.check(R.id.xeMay);
+                                break;
                             case "Ô tô":
                                 mRadioGroup.check(R.id.oTo);
                                 break;

@@ -40,4 +40,6 @@
     <string name="pickup_customer">Đón khách</string>
     <string name="end_ride">Hoàn tất</string>
     <string name="no_customer">Hiện chưa có khách</string>
+    <string name="car">Ô tô</string>
+    <string name="bike">Xe máy</string>
 </resources>

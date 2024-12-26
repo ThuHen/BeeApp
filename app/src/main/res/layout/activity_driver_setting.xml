@@ -52,12 +52,12 @@
             android:id="@+id/xeMay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Xe máy"/>
+            android:text="@string/bike"/>
         <RadioButton
             android:id="@+id/oTo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ô tô"/>
+            android:text="@string/car"/>
     </RadioGroup>
     <Button
         android:id="@+id/setting_confirm"

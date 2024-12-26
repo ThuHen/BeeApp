@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -721,6 +722,38 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         mMap.setMyLocationEnabled(true); // Bật chức năng My Location
 
         mMap.getUiSettings().setMyLocationButtonEnabled(true); // Bật/Tắt nút My Location
+
+        mMap.setOnMapLoadedCallback(() -> {
+            // Di chuyển nút My Location
+            try {
+                View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent())
+                        .findViewById(Integer.parseInt("2"));
+                if (locationButton != null) {
+                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+                    params.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0); // Xóa căn trên cùng
+                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); // Căn lề phải
+                    params.addRule(RelativeLayout.CENTER_VERTICAL); // Căn giữa theo chiều dọc
+                    params.setMargins(0, 0, 30, 0); // Cách mép phải 30px
+                    locationButton.setLayoutParams(params);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // Di chuyển nút Zoom + -
+            try {
+                View zoomControls = ((View) findViewById(Integer.parseInt("1"))).findViewById(Integer.parseInt("0"));
+                if (zoomControls != null) {
+                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) zoomControls.getLayoutParams();
+                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); // Căn lề phải
+                    params.addRule(RelativeLayout.CENTER_VERTICAL); // Căn giữa theo chiều dọc
+                    params.setMargins(0, 0, 30, 0); // Cách mép phải 30px
+                    zoomControls.setLayoutParams(params);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 //
 //// Thay đổi vị trí của nút My Location
 //        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {

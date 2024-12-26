@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +27,8 @@ import com.google.firebase.database.ValueEventListener;
 
 public class HistoryActivity extends AppCompatActivity {
     private String customerOrDriver, userId;
+    private TextView mBalance;
+    private Double Balance = 0.0;
     private RecyclerView mHistoryRecyclerView;
     private RecyclerView.Adapter mHistoryAdapter;
     private RecyclerView.LayoutManager mHistoryLayoutManager;
@@ -38,6 +42,7 @@ public class HistoryActivity extends AppCompatActivity {
 //        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_history);
 
+        mBalance = findViewById(R.id.balance);
 
         // Khởi tạo RecyclerView
         mHistoryRecyclerView = findViewById(R.id.history_scroll);
@@ -64,6 +69,10 @@ public class HistoryActivity extends AppCompatActivity {
 
         // Lấy dữ liệu lịch sử
         getUserHistoryIds();
+
+        if(customerOrDriver.equals("Drivers")){
+            mBalance.setVisibility(View.VISIBLE);
+        }
     }
 
     private void getUserHistoryIds() {
@@ -100,10 +109,39 @@ public class HistoryActivity extends AppCompatActivity {
                     Log.d("HistoryActivity", "Ride found: " + snapshot.getValue());
                     String rideId = snapshot.getKey();
                     Long timestamp = 0L;
+                    String distance ="";
+                    Double ridePrice = 0.0;
+
+                    boolean customerPaid = false;
+                    boolean driverPaidOut = false;
+
                     for (DataSnapshot child : snapshot.getChildren()) {
                         if (child.getKey().equals("timestamp")) {
                             timestamp = Long.valueOf(child.getValue().toString());
                         }
+//                        if (child.getKey().equals("customerPaid") && child.getKey().equals("driverPaidOut")) {
+//                            if(child.getKey().equals("distance")){
+//                                distance = snapshot.child("distance").getValue().toString();
+//                                ridePrice = (Double.valueOf(distance) * 0.4);
+//                                Balance += ridePrice;
+//                                mBalance.setText("Balance: " + String.valueOf(Balance)+" VND");
+//                            }
+//                        }
+                        if (child.getKey().equals("distance")) {
+                            distance = child.getValue().toString();
+                            ridePrice = (Double.valueOf(distance) * 0.4);
+                        }
+                        if (child.getKey().equals("customerPaid")) {
+                            customerPaid = Boolean.TRUE.equals(child.getValue(Boolean.class));
+                        }
+                        if (child.getKey().equals("driverPaidOut")) {
+                            driverPaidOut = Boolean.TRUE.equals(child.getValue(Boolean.class));
+                        }
+                    }
+                    // Tính balance nếu tài xế đã được trả tiền
+                    if (customerPaid && !driverPaidOut) {
+                        Balance += ridePrice; // Cộng dồn doanh thu
+                        mBalance.setText("Balance: " + String.format(Locale.getDefault(), "%.2f VND", Balance));
                     }
                     HistoryObject obj = new HistoryObject(rideId, getDate(timestamp));
                     resultHistory.add(obj);

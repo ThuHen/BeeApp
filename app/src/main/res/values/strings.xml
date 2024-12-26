@@ -42,4 +42,6 @@
     <string name="no_customer">Hiện chưa có khách</string>
     <string name="car">Ô tô</string>
     <string name="bike">Xe máy</string>
+    <string name="request_fill_info">Vui lòng cung cấp đầy đủ thông tin trong phần cài đặt trước khi hoạt.</string>
+    <string name="working">Bật chế độ làm việc</string>
 </resources>

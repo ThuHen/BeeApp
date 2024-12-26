@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,10 +53,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class DriverMapActivity extends FragmentActivity implements OnMapReadyCallback {
-
     private GoogleMap mMap;
     private ActivityDriverMapBinding binding;
-
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
@@ -66,6 +65,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private Button mLogout;
     private Button mSettings;
     private Button mHistory;
+    private Switch mWorkingSwitch;
     private LinearLayout mCustomerInfor;
     private ImageView customerProfileImage;
     private TextView customerName;
@@ -99,7 +99,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         // Initialize location services
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         getUserLocation();
-        getAssignedCustomer();
+//        getAssignedCustomer();
         mLogout = (Button) findViewById(R.id.logout);
 
         mSettings = findViewById(R.id.settings);
@@ -110,13 +110,15 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         customerDestination = findViewById(R.id.customer_Destination);
         mRideStatus = findViewById(R.id.btn_ride_status);
         mHistory = (Button) findViewById(R.id.history);
+        mWorkingSwitch = findViewById(R.id.workingSwitch);
+
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "mLogout clicked: Removing location updates");
                 stopLocationUpdates();
 
-                deleteLocationOnFirebase();
+                deleteDriverAvailableOnFirebase();
                 FirebaseAuth.getInstance().signOut();
                 Intent intent = new Intent(DriverMapActivity.this, MainActivity.class);
                 startActivity(intent);
@@ -165,7 +167,52 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             }
         });
+        mWorkingSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
+            if (b)
+                driverWorkingStatus(true);
+            else {
+                driverWorkingStatus(false);
+            }
+        });
     }
+
+    public interface UserInformationCallback {
+        void onComplete(boolean isComplete);
+    }
+
+    private void checkUserInformation(UserInformationCallback callback) {
+        String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        DatabaseReference mDriverDatabase = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Drivers").child(userId);
+
+        mDriverDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                boolean isValid = true;
+
+                if (snapshot.exists() && snapshot.getChildrenCount() > 0) {
+                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
+
+                    // Kiểm tra từng trường thông tin
+                    if (!map.containsKey("name")) isValid = false;
+                    if (!map.containsKey("phone")) isValid = false;
+                    if (!map.containsKey("car")) isValid = false;
+                    if (!map.containsKey("service")) isValid = false;
+                } else {
+                    isValid = false; // Snapshot không tồn tại hoặc không có dữ liệu
+                }
+
+                // Trả về kết quả qua callback
+                callback.onComplete(isValid);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.onComplete(false); // Có lỗi khi truy xuất dữ liệu
+            }
+        });
+    }
+
 
     private void recordRide() {
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -201,7 +248,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         return timestamp;
     }
 
-
     private DatabaseReference assignedCustomerDestiationLocationRef;
     private ValueEventListener assignedCustomerPickupLocationListener;
     private DatabaseReference assignedCustomerPickupLocationRef;
@@ -225,7 +271,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     // Lấy vị trí của khách hàng
                     if (getAssignedCustomerPickupLocation()) {
                         // chuyển trạng thái driver: available -> working
-                        changeDriverStatusToWorking();
+                        changeWorkingStatus(saveLocationOnFb);
                         getAssignedCustomerDestination();
                         getAssignedCustomerPickupInfo();
                     }
@@ -263,7 +309,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
 
     }
-
 
     private void hideCustomerInfoUI() {
         Log.d(TAG, "hideCustomerInfoUI: Hiding customer info UI");
@@ -481,32 +526,69 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
     }
 
-    private void changeDriverStatusToWorking() {
-        if (userLocation == null) {
-            Log.e(TAG, "changeDriverStatusToWorking: userLocation is null");
+    private void changeWorkingStatus(boolean b) {
+        if (b) {
+            if (userLocation == null) {
+                Log.e(TAG, "changeDriverStatusToWorking: userLocation is null");
+                return;
+            }
+            // Lấy ID của tài xế này từ driverId
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                String driverId = currentUser.getUid();
+                DatabaseReference driverRefAvailable = FirebaseDatabase.getInstance().getReference("driverAvailable");
+                DatabaseReference driverRefWorking = FirebaseDatabase.getInstance().getReference("driversWorking");
+                GeoFire geoFireAvailable = new GeoFire(driverRefAvailable);
+                GeoFire geoFireWorking = new GeoFire(driverRefWorking);
+                if (Objects.equals(customerId, "") || customerId == null) {
+
+                    geoFireWorking.removeLocation(driverId);
+                    geoFireAvailable.setLocation(driverId, new GeoLocation(userLocation.latitude, userLocation.longitude));
+                    Log.d(TAG, "saved location available driver");
+                } else {
+                    geoFireAvailable.removeLocation(driverId);
+                    geoFireWorking.setLocation(driverId, new GeoLocation(userLocation.latitude, userLocation.longitude));
+                    Log.d(TAG, "saved location available driver");
+
+                }
+            }
+        } else {
             return;
         }
-        // Lấy ID của tài xế này từ driverId
-        String driverId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-        DatabaseReference driverRefAvailable = FirebaseDatabase.getInstance().getReference("driverAvailable");
-        DatabaseReference driverRefWorking = FirebaseDatabase.getInstance().getReference("driversWorking");
-        GeoFire geoFireAvailable = new GeoFire(driverRefAvailable);
-        GeoFire geoFireWorking = new GeoFire(driverRefWorking);
-        if (Objects.equals(customerId, "") || customerId == null) {
+    }
 
-            geoFireWorking.removeLocation(driverId);
-            geoFireAvailable.setLocation(driverId, new GeoLocation(userLocation.latitude, userLocation.longitude));
-            Log.d(TAG, "saved location available driver");
+    private void disconnectDriver() {
+        stopLocationUpdates();
+        deleteDriverAvailableOnFirebase();
+    }
+
+    private void driverWorkingStatus(Boolean status) {
+        if (status) {
+            checkUserInformation(isComplete -> {
+                if (isComplete) {
+                    // Thông tin đầy đủ, xử lý logic tiếp theo
+                    Log.d("Info", "Thông tin người dùng đầy đủ.");
+                } else {
+                    Log.d("Info", "Thông tin người dùng chưa đầy đủ.");
+                    // Hiển thị thông báo lỗi
+                    Toast.makeText(DriverMapActivity.this, R.string.request_fill_info, Toast.LENGTH_SHORT).show();
+
+                    // Chuyển trạng thái Switch về ban đầu (tắt)
+
+                    mWorkingSwitch.setChecked(false);
+                }
+            });
+            saveLocationOnFb = true;
+            startLocationUpdates();
+            getAssignedCustomer();
         } else {
-            geoFireAvailable.removeLocation(driverId);
-            geoFireWorking.setLocation(driverId, new GeoLocation(userLocation.latitude, userLocation.longitude));
-            Log.d(TAG, "saved location available driver");
-
+            saveLocationOnFb = false;
+            disconnectDriver();
         }
-
     }
 
     private boolean hasMovedCamera = false;
+    private boolean saveLocationOnFb = false; // Mặc định không gọi
 
     @SuppressLint("MissingPermission")
     private void getUserLocation() {
@@ -536,33 +618,17 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 20)); // Di chuyển camera đến vị trí mới
                             hasMovedCamera = true; // Đánh dấu là đã di chuyển camera
                         }
-
                         // Cập nhật vị trí người dùng trong Firebase
-                        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                        if (currentUser != null) {
-
-                            changeDriverStatusToWorking();
-
-                        } else {
-                            Log.e(TAG, "onLocationResult: cant save location, user logOut");
-                            return;
-                        }
-
-
+                        changeWorkingStatus(saveLocationOnFb);
                     } else {
                         Log.e(TAG, "onLocationResult: LastLocationResult is null");
                         return;
                     }
                 }
             }
-        }
-
-        ;
-
+        };
 // Bắt đầu yêu cầu cập nhật vị trí
-
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
-
+        startLocationUpdates();
     }
 
     private void stopLocationUpdates() {
@@ -571,22 +637,24 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     }
 
     @SuppressLint("MissingPermission")
+    private void startLocationUpdates() {
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+        Log.d(TAG, "startLocationUpdates: Starting location updates");
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume:");
         hasMovedCamera = false; // Reset lại cờ khi Activity được mở lại
         // Kiểm tra nếu người dùng đã đăng nhập và cần cập nhật vị trí
-
-
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
-            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+            startLocationUpdates();
             Log.d(TAG, "onResume: continue update location.");
         } else {
             Log.d(TAG, "onResume: User not logged in, no need to update location.");
         }
-
     }
 
     @Override
@@ -594,8 +662,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         super.onPause();
         Log.d(TAG, "onPause:");
         stopLocationUpdates();
-
-
     }
 
     @Override
@@ -635,10 +701,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 //            }
 //        });
 
-
     }
 
-    public void deleteLocationOnFirebase() {
+    public void deleteDriverAvailableOnFirebase() {
         // Xóa vị trí của người dùng khỏi Firebase
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
@@ -648,15 +713,15 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             geoFire.removeLocation(userId, (key, error) -> {
                 if (error != null) {
-                    Log.e(TAG, "deleteLocationOnFirebase:Failed to remove location: " + error.getMessage());
+                    Log.e(TAG, "deleteDriverAvailableOnFirebase:Failed to remove location: " + error.getMessage());
                 } else {
-                    Log.d(TAG, "deleteLocationOnFirebase:Location successfully removed for userId: " + userId);
+                    Log.d(TAG, "deleteDriverAvailableOnFirebase:Location successfully removed for userId: " + userId);
                 }
             });
-            Log.d(TAG, "deleteLocationOnFirebase:Xóa vị trí của người dùng khỏi Firebase");
+            Log.d(TAG, "deleteDriverAvailableOnFirebase:Xóa vị trí của người dùng khỏi Firebase");
 
         } else {
-            Log.e(TAG, "deleteLocationOnFirebase: deleted location, user logOut");
+            Log.e(TAG, "deleteDriverAvailableOnFirebase: deleted location, user logOut");
             return;
         }
 
@@ -666,8 +731,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "onStop:");
-        stopLocationUpdates();
-        deleteLocationOnFirebase();
+        disconnectDriver();
 
     }
 }

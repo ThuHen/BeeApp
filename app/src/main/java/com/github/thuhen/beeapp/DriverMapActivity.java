@@ -78,7 +78,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private Double routeDistance = (double) -1;
     private Marker pickupMarker;
     private Button mRideStatus;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -213,6 +212,22 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         });
     }
 
+    //Tính khoảng cách từ điểm đón đến điểm đến
+    private double calculateHaversineDistance(LatLng pickupLatLng, LatLng destinationLatLng) {
+        final int R = 6371; // Bán kính Trái Đất tính bằng km
+
+        double latDistance = Math.toRadians(destinationLatLng.latitude - pickupLatLng.latitude);
+        double lonDistance = Math.toRadians(destinationLatLng.longitude - pickupLatLng.longitude);
+
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(pickupLatLng.latitude))
+                * Math.cos(Math.toRadians(destinationLatLng.latitude))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c * 1000; // Trả về khoảng cách bằng mét
+    }
+
 
     private void recordRide() {
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -225,6 +240,15 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         String historyId = historyRef.push().getKey();// lấy id duy nhất
         driverRef.child(historyId).setValue(true);
         customerRef.child(historyId).setValue(true);
+        /// Tính khoảng cách giữa điểm đón và điểm đến
+        double distance = calculateHaversineDistance(customerLatLng, destinationLocation);
+        rideDistance = (float) distance; // Lưu khoảng cách vào rideDistance
+        Log.d(TAG, "Distance (haversine): " + (rideDistance / 1000) + " km");
+
+        // Tính toán chi phí chuyến đi
+        double costPerKm = 5000; // Giá mỗi km
+        double baseFare = 10000; // Phí cố định
+        double totalCost = baseFare + (rideDistance / 1000) * costPerKm;
         HashMap<String, Object> map = new HashMap<>();
         map.put("driverId", driverId);
         map.put("customerId", customerId);
@@ -239,7 +263,13 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         map.put("location/from/long", customerLatLng.longitude);
         map.put("location/to/lat", destinationLocation.latitude);
         map.put("location/to/long", destinationLocation.longitude);
+        map.put("distance", rideDistance);
+        map.put("cost", totalCost);
+        // Lưu trạng thái thanh toán
+        map.put("customerPaid", true); // Khách hàng đã thanh toán
+        map.put("driverPaidOut", false); // Tài xế chưa được trả tiền
         historyRef.child(historyId).updateChildren(map);
+        Log.d(TAG, "recordRide: Ride recorded successfully. Total cost: " + totalCost + " VND");
 
     }
 
@@ -589,6 +619,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     private boolean hasMovedCamera = false;
     private boolean saveLocationOnFb = false; // Mặc định không gọi
+    private Location mLastLocation;
+    private float rideDistance = 0;
 
     @SuppressLint("MissingPermission")
     private void getUserLocation() {
@@ -606,6 +638,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 if (locationResult == null) {
                     return;
                 }
+
                 for (Location location : locationResult.getLocations()) {
 
                     if (location != null) {
@@ -613,6 +646,17 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         double longitude = location.getLongitude();
                         // Log.d(TAG, "onLocationResult: Location - Lat: " + latitude + ", Lng: " + longitude);
                         userLocation = new LatLng(latitude, longitude);
+
+                        // Kiểm tra và tính khoảng cách di chuyển
+                        if (mLastLocation != null) {
+                            // Tính khoảng cách từ vị trí trước đó đến vị trí hiện tại
+                            rideDistance += mLastLocation.distanceTo(location); // Khoảng cách tính bằng mét
+                            Log.d(TAG, "onLocationResult: Distance traveled: " + (rideDistance / 1000) + " km"); // In khoảng cách bằng km
+                        }
+
+                        // Cập nhật vị trí hiện tại
+                        mLastLocation = location;
+
 
                         if (!hasMovedCamera) {
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 20)); // Di chuyển camera đến vị trí mới

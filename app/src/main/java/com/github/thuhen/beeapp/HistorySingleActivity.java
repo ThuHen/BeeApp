@@ -1,6 +1,7 @@
 package com.github.thuhen.beeapp;
 
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -46,6 +47,8 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
     private LatLng destinationLatLng, pickupLatLng;
     private GoogleMap mMap;
     private SupportMapFragment mMapFragment;
+    private String distance;
+    private Double ridePrice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +79,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
 
     private void getRideInformation() {
         historyRideInfoDb.addListenerForSingleValueEvent(new ValueEventListener() {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
@@ -106,6 +110,11 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                         }
                         if (child.getKey().equals("rating")) {
                             mRatingBar.setRating(Integer.valueOf(child.getValue().toString()));
+                        }
+                        if (child.getKey().equals("distance")) {
+                            distance = child.getValue().toString();
+                            rideDistance.setText(distance.substring(0, Math.min(distance.length(), 5)) + " km");
+                            ridePrice = Double.valueOf(distance) + 0.5;
                         }
                         if (child.getKey().equals("destination")) {
                             String latitude = child.child("latitude").getValue().toString();

@@ -44,4 +44,5 @@
     <string name="bike">Xe máy</string>
     <string name="request_fill_info">Vui lòng cung cấp đầy đủ thông tin trong phần cài đặt trước khi hoạt.</string>
     <string name="working">Bật chế độ làm việc</string>
+    <string name="balance_current">Số dư tài khoản: 1000 vnd</string>
 </resources>

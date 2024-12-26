@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,11 +56,11 @@ import java.util.Objects;
 public class DriverMapActivity extends FragmentActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
     private ActivityDriverMapBinding binding;
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private LocationCallback locationCallback;
-    private LocationRequest locationRequest;
+    private FusedLocationProviderClient mFusedLocationProviderClient;
+    private LocationCallback mLocationCallback;
+    private LocationRequest mLocationRequest;
     private String customerId = "";
-    private LatLng userLocation;
+    private LatLng driverLatLng;
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "DriverMapActivity"; // Tag dùng trong Logcat
     private Button mLogout;
@@ -70,7 +71,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private ImageView customerProfileImage;
     private TextView customerName;
     private TextView customerPhone;
-    private TextView customerDestination;
+    //    private TextView customerDestination;
     private LatLng destinationLocation;
     private Marker destinationMarker;
     private LatLng customerLatLng;
@@ -78,6 +79,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private Double routeDistance = (double) -1;
     private Marker pickupMarker;
     private Button mRideStatus;
+    private boolean hasMovedCamera = false;
+    private boolean saveLocationOnFb = false; // Mặc định không gọi
+    private Location mLastCustomerLocation;
+    private float rideDistance = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,7 +102,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
 
         // Initialize location services
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         getUserLocation();
 //        getAssignedCustomer();
         mLogout = (Button) findViewById(R.id.logout);
@@ -106,7 +112,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         customerProfileImage = findViewById(R.id.customer_profile_image);
         customerName = findViewById(R.id.customer_name);
         customerPhone = findViewById(R.id.customer_phone);
-        customerDestination = findViewById(R.id.customer_Destination);
+//        customerDestination = findViewById(R.id.customer_Destination);
         mRideStatus = findViewById(R.id.btn_ride_status);
         mHistory = (Button) findViewById(R.id.history);
         mWorkingSwitch = findViewById(R.id.workingSwitch);
@@ -212,22 +218,22 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         });
     }
 
-    //Tính khoảng cách từ điểm đón đến điểm đến
-    private double calculateHaversineDistance(LatLng pickupLatLng, LatLng destinationLatLng) {
-        final int R = 6371; // Bán kính Trái Đất tính bằng km
-
-        double latDistance = Math.toRadians(destinationLatLng.latitude - pickupLatLng.latitude);
-        double lonDistance = Math.toRadians(destinationLatLng.longitude - pickupLatLng.longitude);
-
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(pickupLatLng.latitude))
-                * Math.cos(Math.toRadians(destinationLatLng.latitude))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c * 1000; // Trả về khoảng cách bằng mét
-    }
-
+//    //Tính khoảng cách từ điểm đón đến điểm đến
+//    private double calculateHaversineDistance(LatLng pickupLatLng, LatLng destinationLatLng) {
+//        final int R = 6371; // Bán kính Trái Đất tính bằng km
+//
+//        double latDistance = Math.toRadians(destinationLatLng.latitude - pickupLatLng.latitude);
+//        double lonDistance = Math.toRadians(destinationLatLng.longitude - pickupLatLng.longitude);
+//
+//        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+//                + Math.cos(Math.toRadians(pickupLatLng.latitude))
+//                * Math.cos(Math.toRadians(destinationLatLng.latitude))
+//                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+//
+//        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+////        return R * c * 1000; // Trả về khoảng cách bằng mét
+//        return R * c; // Trả về khoảng cách bằng mét
+//    }
 
     private void recordRide() {
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -241,20 +247,21 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         driverRef.child(historyId).setValue(true);
         customerRef.child(historyId).setValue(true);
         /// Tính khoảng cách giữa điểm đón và điểm đến
-        double distance = calculateHaversineDistance(customerLatLng, destinationLocation);
+        double distance = calculateDistance(customerLatLng, destinationLocation);
         rideDistance = (float) distance; // Lưu khoảng cách vào rideDistance
         Log.d(TAG, "Distance (haversine): " + (rideDistance / 1000) + " km");
 
         // Tính toán chi phí chuyến đi
+        double driverPercentage = 0.4;
         double costPerKm = 5000; // Giá mỗi km
         double baseFare = 10000; // Phí cố định
-        double totalCost = baseFare + (rideDistance / 1000) * costPerKm;
+        double totalCost = baseFare + (rideDistance) * costPerKm;
+        double ridePrice = rideDistance * costPerKm * driverPercentage;
         HashMap<String, Object> map = new HashMap<>();
         map.put("driverId", driverId);
         map.put("customerId", customerId);
         map.put("rating", 0);
         map.put("timestamp", getCurrentTimestamp());
-//        map.put("destination", destinationLocation);
         Map<String, Double> destinationMap = new HashMap<>();
         destinationMap.put("latitude", destinationLocation.latitude);
         destinationMap.put("longitude", destinationLocation.longitude);
@@ -345,7 +352,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         mCustomerInfor.setVisibility(View.GONE);
         customerName.setText("");
         customerPhone.setText("");
-        customerDestination.setText(R.string.destination);
+//        customerDestination.setText(R.string.destination);
         customerProfileImage.setImageResource(R.mipmap.icon_default_user);
     }
 
@@ -391,7 +398,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
 
                                 // Tính khoảng cách
-                                double distanceInKm = calculateDistance(userLocation, customerLatLng);
+                                double distanceInKm = calculateDistance(driverLatLng, customerLatLng);
                                 Log.d(TAG, "Distance between Driver and Customer: " + distanceInKm + " km");
                                 Toast.makeText(DriverMapActivity.this, String.format("Customer is %.2f km away", distanceInKm), Toast.LENGTH_SHORT).show();
 //                                getAssignedCustomerDestination();
@@ -444,7 +451,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         destinationMarker = mMap.addMarker(new MarkerOptions()
                                 .position(destinationLocation)
                                 .title("Customer Pickup Location")
-                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination)));
+                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground)));
                         // Move and zoom camera to customer location
                         //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLocation, 15));
                         Log.d(TAG, "Customer destination Location: Lat=" + latitude + ", Lng=" + longitude);
@@ -558,7 +565,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     private void changeWorkingStatus(boolean b) {
         if (b) {
-            if (userLocation == null) {
+            if (driverLatLng == null) {
                 Log.e(TAG, "changeDriverStatusToWorking: userLocation is null");
                 return;
             }
@@ -573,11 +580,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 if (Objects.equals(customerId, "") || customerId == null) {
 
                     geoFireWorking.removeLocation(driverId);
-                    geoFireAvailable.setLocation(driverId, new GeoLocation(userLocation.latitude, userLocation.longitude));
+                    geoFireAvailable.setLocation(driverId, new GeoLocation(driverLatLng.latitude, driverLatLng.longitude));
                     Log.d(TAG, "saved location available driver");
                 } else {
                     geoFireAvailable.removeLocation(driverId);
-                    geoFireWorking.setLocation(driverId, new GeoLocation(userLocation.latitude, userLocation.longitude));
+                    geoFireWorking.setLocation(driverId, new GeoLocation(driverLatLng.latitude, driverLatLng.longitude));
                     Log.d(TAG, "saved location available driver");
 
                 }
@@ -613,26 +620,21 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             getAssignedCustomer();
         } else {
             saveLocationOnFb = false;
-            disconnectDriver();
+            deleteDriverAvailableOnFirebase();
         }
     }
-
-    private boolean hasMovedCamera = false;
-    private boolean saveLocationOnFb = false; // Mặc định không gọi
-    private Location mLastLocation;
-    private float rideDistance = 0;
 
     @SuppressLint("MissingPermission")
     private void getUserLocation() {
         Log.d(TAG, "getUserLocation: Starting location updates");
 
-        locationRequest = new LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 5000)
+        mLocationRequest = new LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 5000)
                 .setWaitForAccurateLocation(false)
                 .setMinUpdateIntervalMillis(2000)
                 .setMaxUpdateDelayMillis(5000)
                 .build();
 
-        locationCallback = new LocationCallback() {
+        mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 if (locationResult == null) {
@@ -645,21 +647,21 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         double latitude = location.getLatitude();
                         double longitude = location.getLongitude();
                         // Log.d(TAG, "onLocationResult: Location - Lat: " + latitude + ", Lng: " + longitude);
-                        userLocation = new LatLng(latitude, longitude);
+                        driverLatLng = new LatLng(latitude, longitude);
 
                         // Kiểm tra và tính khoảng cách di chuyển
-                        if (mLastLocation != null) {
+                        if (mLastCustomerLocation != null) {
                             // Tính khoảng cách từ vị trí trước đó đến vị trí hiện tại
-                            rideDistance += mLastLocation.distanceTo(location); // Khoảng cách tính bằng mét
+                            rideDistance += mLastCustomerLocation.distanceTo(location); // Khoảng cách tính bằng mét
                             Log.d(TAG, "onLocationResult: Distance traveled: " + (rideDistance / 1000) + " km"); // In khoảng cách bằng km
                         }
 
                         // Cập nhật vị trí hiện tại
-                        mLastLocation = location;
+                        mLastCustomerLocation = location;
 
 
                         if (!hasMovedCamera) {
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 20)); // Di chuyển camera đến vị trí mới
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(driverLatLng, 20)); // Di chuyển camera đến vị trí mới
                             hasMovedCamera = true; // Đánh dấu là đã di chuyển camera
                         }
                         // Cập nhật vị trí người dùng trong Firebase
@@ -676,13 +678,13 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     }
 
     private void stopLocationUpdates() {
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+        mFusedLocationProviderClient.removeLocationUpdates(mLocationCallback);
         Log.d(TAG, "stopLocationUpdates: Removing location updates");
     }
 
     @SuppressLint("MissingPermission")
     private void startLocationUpdates() {
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+        mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
         Log.d(TAG, "startLocationUpdates: Starting location updates");
     }
 
@@ -721,29 +723,38 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         mMap.setMyLocationEnabled(true); // Bật chức năng My Location
 
         mMap.getUiSettings().setMyLocationButtonEnabled(true); // Bật/Tắt nút My Location
-//
-//// Thay đổi vị trí của nút My Location
-//        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-//            @Override
-//            public void onMapLoaded() {
-//                try {
-//                    // Lấy tham chiếu đến nút My Location
-//                    View locationButton = ((View) mapFragment.getView().findViewById(0x2)); // ID của nút My Location
-//                    if (locationButton != null) {
-//                        // Lấy layoutParams hiện tại của nút My Location
-//                        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
-//
-//                        // Di chuyển nút My Location xuống dưới một chút
-//                        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM); // Giữ nó ở dưới cùng
-//                        layoutParams.setMargins(0, 0, 0, 150);  // Thêm khoảng cách từ dưới lên (150px)
-//
-//                        locationButton.setLayoutParams(layoutParams);  // Cập nhật layout mới
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        });
+        mMap.setOnMapLoadedCallback(() -> {
+            // Di chuyển nút My Location
+            try {
+                View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent())
+                        .findViewById(Integer.parseInt("2"));
+                if (locationButton != null) {
+                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+                    params.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0); // Xóa căn trên cùng
+                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); // Căn lề phải
+                    params.addRule(RelativeLayout.CENTER_VERTICAL); // Căn giữa theo chiều dọc
+                    params.setMargins(0, 0, 30, 0); // Cách mép phải 30px
+                    locationButton.setLayoutParams(params);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            // Di chuyển nút Zoom + -
+            try {
+                View zoomControls = ((View) findViewById(Integer.parseInt("1"))).findViewById(Integer.parseInt("0"));
+                if (zoomControls != null) {
+                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) zoomControls.getLayoutParams();
+                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); // Căn lề phải
+//                    params.addRule(RelativeLayout.CENTER_VERTICAL); // Căn giữa theo chiều dọc
+                    params.addRule(RelativeLayout.BELOW, ((View) findViewById(Integer.parseInt("2"))).getId());
+                    params.setMargins(0, 0, 30, 0); // Cách mép phải 30px
+                    zoomControls.setLayoutParams(params);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
 
     }
 

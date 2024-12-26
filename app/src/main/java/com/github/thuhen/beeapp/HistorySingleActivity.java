@@ -121,7 +121,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                             String longitude = child.child("longitude").getValue().toString();
 
                             // Kết hợp latitude và longitude thành chuỗi tọa độ
-                            String coordinates = "Latitude: " + latitude + "\n" + "Longitude: " + longitude;
+                            String coordinates = "Tọa độ điểm đến\n ("+ latitude + ", " + longitude+")";
                             rideLocation.setText(coordinates); // Hiển thị tọa độ lên TextView
                         }
 

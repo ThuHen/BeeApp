@@ -70,7 +70,7 @@ public class HistoryActivity extends AppCompatActivity {
         // Lấy dữ liệu lịch sử
         getUserHistoryIds();
 
-        if(customerOrDriver.equals("Drivers")){
+        if (customerOrDriver.equals("Drivers")) {
             mBalance.setVisibility(View.VISIBLE);
         }
     }
@@ -109,7 +109,7 @@ public class HistoryActivity extends AppCompatActivity {
                     Log.d("HistoryActivity", "Ride found: " + snapshot.getValue());
                     String rideId = snapshot.getKey();
                     Long timestamp = 0L;
-                    String distance ="";
+                    String distance = "";
                     Double ridePrice = 0.0;
 
                     boolean customerPaid = false;
@@ -129,8 +129,9 @@ public class HistoryActivity extends AppCompatActivity {
 //                        }
                         if (child.getKey().equals("distance")) {
                             distance = child.getValue().toString();
-                            ridePrice = (Double.valueOf(distance) * 0.4);
+                            ridePrice = (Double.valueOf(distance)) * 0.4 * 5000;
                         }
+
                         if (child.getKey().equals("customerPaid")) {
                             customerPaid = Boolean.TRUE.equals(child.getValue(Boolean.class));
                         }
@@ -138,7 +139,7 @@ public class HistoryActivity extends AppCompatActivity {
                             driverPaidOut = Boolean.TRUE.equals(child.getValue(Boolean.class));
                         }
                     }
-                    // Tính balance nếu tài xế đã được trả tiền
+                    // Tính balance- tiền trong app nếu tài xế chưa được trả tiền
                     if (customerPaid && !driverPaidOut) {
                         Balance += ridePrice; // Cộng dồn doanh thu
                         mBalance.setText("Balance: " + String.format(Locale.getDefault(), "%.2f VND", Balance));

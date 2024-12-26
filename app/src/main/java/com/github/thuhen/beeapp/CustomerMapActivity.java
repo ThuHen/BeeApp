@@ -20,6 +20,7 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RatingBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -735,14 +736,44 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 // Thêm marker mới cho điểm được chọn
                 destinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLocation)
                         .title("Pickup Location")
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination)));
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground)));
                 Toast.makeText(this, "Destination location set!", Toast.LENGTH_SHORT).show();
                 mRequest.setText(R.string.call_bee);
                 // Lưu tọa độ điểm đón vào Firebase
                 //saveCustomerRequest();
             }
         });
-
+        mMap.setOnMapLoadedCallback(() -> {
+            // Di chuyển nút My Location
+            try {
+                View locationButton = ((View) findViewById(Integer.parseInt("1")).getParent())
+                        .findViewById(Integer.parseInt("2"));
+                if (locationButton != null) {
+                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+                    params.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0); // Xóa căn trên cùng
+                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); // Căn lề phải
+                    params.addRule(RelativeLayout.CENTER_VERTICAL); // Căn giữa theo chiều dọc
+                    params.setMargins(0, 0, 30, 0); // Cách mép phải 30px
+                    locationButton.setLayoutParams(params);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            // Di chuyển nút Zoom + -
+            try {
+                View zoomControls = ((View) findViewById(Integer.parseInt("1"))).findViewById(Integer.parseInt("0"));
+                if (zoomControls != null) {
+                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) zoomControls.getLayoutParams();
+                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); // Căn lề phải
+//                    params.addRule(RelativeLayout.CENTER_VERTICAL); // Căn giữa theo chiều dọc
+                    params.addRule(RelativeLayout.BELOW, ((View) findViewById(Integer.parseInt("2"))).getId());
+                    params.setMargins(0, 0, 30, 0); // Cách mép phải 30px
+                    zoomControls.setLayoutParams(params);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
     }
 

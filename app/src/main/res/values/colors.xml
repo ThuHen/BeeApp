@@ -6,4 +6,5 @@
     <color name="honey_milk_yellow">#FAF0CB</color> <!-- Màu vàng ong pha sữa -->
     <color name="button_border_color">#090600</color>
     <color name="white_settingLayout">#FDF9ED</color> <!-- Màu viền cho Button -->
+    <color name="white_app">#F8F5EF</color>
 </resources>

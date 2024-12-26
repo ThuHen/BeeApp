@@ -733,7 +733,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     destinationMarker.remove();
                 }
                 // Thêm marker mới cho điểm được chọn
-                destinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLocation).title("Pickup Location"));
+                destinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLocation)
+                        .title("Pickup Location")
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination)));
                 Toast.makeText(this, "Destination location set!", Toast.LENGTH_SHORT).show();
                 mRequest.setText(R.string.call_bee);
                 // Lưu tọa độ điểm đón vào Firebase

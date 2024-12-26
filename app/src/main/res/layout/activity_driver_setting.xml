@@ -4,61 +4,84 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:background="@color/white"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="20sp"
     tools:context=".DriverSettingActivity">
 
-    <ImageView
-        android:id="@+id/profile_image"
-        android:layout_width="100sp"
-        android:layout_height="100sp"
-        android:layout_marginBottom="20sp"
-        android:src="@mipmap/icon_default_driver" />
-
-    <EditText
-        android:id="@+id/setting_name"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginBottom="20sp"
-        android:background="@null"
-        android:hint="@string/name_setting"
-        android:padding="5sp" />
-
-    <EditText
-        android:id="@+id/setting_phone"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginBottom="20sp"
-        android:background="@null"
-        android:hint="@string/phone_setting"
-        android:padding="10sp" />
-
-    <EditText
-        android:id="@+id/setting_car"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginBottom="20sp"
-        android:background="@null"
-        android:hint="@string/car_setting"
-        android:padding="10sp" />
-    <RadioGroup
-        android:id="@+id/radioGroup"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <RadioButton
-            android:id="@+id/xeMay"
-            android:layout_width="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="10dp"
+
+        >
+
+        <ImageView
+            android:id="@+id/profile_image"
+            android:layout_width="100sp"
+            android:layout_height="100sp"
+            android:src="@mipmap/icon_default_driver"
+            android:layout_gravity="center_vertical"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/bike"/>
-        <RadioButton
-            android:id="@+id/oTo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/car"/>
-    </RadioGroup>
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/setting_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:hint="@string/name_setting"
+                android:minHeight="50dp"
+                android:paddingHorizontal="20dp" />
+
+            <EditText
+                android:id="@+id/setting_phone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:hint="@string/phone_setting"
+                android:minHeight="50dp"
+                android:paddingHorizontal="20dp" />
+
+            <EditText
+                android:id="@+id/setting_car"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:hint="@string/car_setting"
+                android:minHeight="50dp"
+                android:paddingHorizontal="20dp" />
+
+            <RadioGroup
+                android:id="@+id/radioGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/xeMay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bike"
+                    android:layout_marginRight="5dp"/>
+
+                <RadioButton
+                    android:id="@+id/oTo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/car"
+                    android:layout_marginRight="5dp"/>
+            </RadioGroup>
+        </LinearLayout>
+    </LinearLayout>
+
     <Button
         android:id="@+id/setting_confirm"
         android:layout_width="match_parent"
@@ -66,8 +89,6 @@
         android:layout_marginLeft="15sp"
         android:layout_marginRight="15sp"
         android:text="@string/confirm_setting" />
-
-
 
 
 </LinearLayout>

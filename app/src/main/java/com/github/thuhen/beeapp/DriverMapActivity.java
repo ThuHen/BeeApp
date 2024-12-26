@@ -413,8 +413,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                             destinationMarker.remove();
                         destinationMarker = mMap.addMarker(new MarkerOptions()
                                 .position(destinationLocation)
-                                .title("Customer Pickup Location"));
-                        // .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_app_bee_customer)));
+                                .title("Customer Pickup Location")
+                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination)));
                         // Move and zoom camera to customer location
                         //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLocation, 15));
                         Log.d(TAG, "Customer destination Location: Lat=" + latitude + ", Lng=" + longitude);

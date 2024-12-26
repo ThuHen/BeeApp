@@ -4,36 +4,58 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="20sp"
-    tools:context=".CustomerSettingActivity">
-<ImageView
-    android:layout_width="100sp"
-    android:layout_height="100sp"
-    android:id="@+id/profile_image"
-    android:src="@mipmap/icon_default_user"
-    android:layout_marginBottom="20sp"
+    tools:context=".CustomerSettingActivity"
+    android:background="@color/white_settingLayout"
+    android:layout_gravity="center"
+   >
 
-    />
-    <EditText
-        android:id="@+id/setting_name"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginBottom="20sp"
-        android:background="@null"
-        android:hint="@string/name_setting"
-        android:padding="5sp" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="10dp"
+        >
 
-    <EditText
-        android:id="@+id/setting_phone"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginBottom="20sp"
-        android:background="@null"
-        android:hint="@string/phone_setting"
-        android:padding="10sp" />
+        <ImageView
+            android:id="@+id/profile_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="5dp"
+            android:src="@mipmap/icon_default_user"
+            android:layout_gravity="center_vertical"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/setting_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="50dp"
+                android:layout_marginBottom="10dp"
+                android:paddingHorizontal="20dp"
+                android:hint="@string/name_setting"
+                />
+
+            <EditText
+                android:id="@+id/setting_phone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="50dp"
+                android:layout_marginBottom="10dp"
+                android:paddingHorizontal="20dp"
+                android:hint="@string/phone_setting"
+                />
+
+        </LinearLayout>
+    </LinearLayout>
+
 
     <Button
         android:id="@+id/setting_confirm"
@@ -41,9 +63,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="15sp"
         android:layout_marginRight="15sp"
-        android:text="@string/confirm_setting"
-        />
-
+        android:text="@string/confirm_setting" />
 
 
 </LinearLayout>

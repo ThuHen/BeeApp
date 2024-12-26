@@ -117,22 +117,31 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@android:color/white">
+
+
+            >
             <RadioGroup
                 android:id="@+id/radioGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:padding="20dp">
+
                 <RadioButton
                     android:id="@+id/xeMay"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Xe máy"/>
+                    android:layout_marginRight="10dp"
+                    android:text="Xe máy"
+                    android:background="@color/white_settingLayout"
+                    android:paddingEnd="20dp"/>
                 <RadioButton
                     android:id="@+id/oTo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ô tô"/>
+                    android:text="Ô tô"
+                    android:background="@color/white_settingLayout"
+                    android:paddingEnd="20dp"/>
             </RadioGroup>
 
             <!-- Nút gọi ở dưới cùng màn hình -->

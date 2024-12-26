@@ -2,7 +2,7 @@
 
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Đặt màu nền cho button -->
-    <solid android:color="@color/white_app" />
+    <solid android:color="@color/honey_yellow_light" />
 
     <!-- Đặt viền cho button -->
     <stroke

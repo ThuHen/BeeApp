@@ -5,7 +5,6 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
@@ -14,10 +13,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -132,6 +135,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                                     .child("lat").getValue().toString()), Double.valueOf(child.child("from").child("long").getValue().toString()));
                             destinationLatLng = new LatLng(Double.valueOf(child.child("to")
                                     .child("lat").getValue().toString()), Double.valueOf(child.child("to").child("long").getValue().toString()));
+                            initializeMapIfReady();
 
                         }
                     }
@@ -223,9 +227,37 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
         return date;
     }
 
+    private void initializeMapIfReady() {
+        if (mMap != null) {
+            if (pickupLatLng != null && destinationLatLng != null) {
+                LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                builder.include(pickupLatLng);
+                builder.include(destinationLatLng);
+                LatLngBounds bounds = builder.build();
+
+                int padding = 100;
+                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+
+                LatLng pickupLocation = new LatLng(pickupLatLng.latitude, pickupLatLng.longitude);
+                LatLng destinationLocation = new LatLng(destinationLatLng.latitude, destinationLatLng.longitude);
+                mMap.addMarker(new MarkerOptions().position(destinationLocation)
+                        .title("Đích đến")
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground)));
+                mMap.addMarker(new MarkerOptions().position(pickupLocation)
+                        .title("Điểm đón")
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground)));
+            } else {
+                Log.e("MapError", "pickupLatLng or destinationLatLng is null");
+            }
+        }
+    }
+
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
+
+
+
     }
 
 }

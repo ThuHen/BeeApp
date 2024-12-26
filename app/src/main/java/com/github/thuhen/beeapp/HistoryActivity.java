@@ -142,7 +142,7 @@ public class HistoryActivity extends AppCompatActivity {
                     // Tính balance- tiền trong app nếu tài xế chưa được trả tiền
                     if (customerPaid && !driverPaidOut) {
                         Balance += ridePrice; // Cộng dồn doanh thu
-                        mBalance.setText("Balance: " + String.format(Locale.getDefault(), "%.2f VND", Balance));
+                        mBalance.setText(R.string.balance_current + String.format(Locale.getDefault(), "%.2f VND", Balance));
                     }
                     HistoryObject obj = new HistoryObject(rideId, getDate(timestamp));
                     resultHistory.add(obj);

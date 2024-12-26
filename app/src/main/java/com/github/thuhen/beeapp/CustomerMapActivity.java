@@ -40,6 +40,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -62,13 +63,13 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
-    private LatLng userLocation;
+    private LatLng customerLatLng;
     private Button mRequest;
     private Button mLogout;
     private Button mSetting;
     private Button mHistory;
     //vi tri đón khách nay
-    private LatLng pickupLocation;
+    private LatLng pickupLatLng;
     private Marker pickupMarker;
     private LatLng destinationLocation;
     private Marker destinationMarker;
@@ -167,11 +168,11 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
 
                                     Log.d(TAG, "saved location");
-                                    pickupLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                                    pickupLatLng = new LatLng(location.getLatitude(), location.getLongitude());
 
-                                    pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLocation)
+                                    pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLatLng)
                                             .title(getString(R.string.pickup_here))
-                                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_app_bee_customer)))
+                                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground)))
                                     ;
 
                                     getClosestDriver();
@@ -332,7 +333,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         GeoFire geofire = new GeoFire(driverLocation);
         // Truy vấn vị trí tài xế gần nhất
         geoQuery = geofire.queryAtLocation
-                (new GeoLocation(pickupLocation.latitude, pickupLocation.longitude), radius);
+                (new GeoLocation(pickupLatLng.latitude, pickupLatLng.longitude), radius);
         // Xóa tất cả listener cũ
         geoQuery.removeAllListeners();
         // Thêm listener mới
@@ -503,9 +504,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                             LatLng driverLatLng = new LatLng(driverLat, driverLng);
                             // Hiển thị vị trí tài xế trên bản đồ
                             updateDriverMarker(driverLat, driverLng);
-                            if (pickupLocation != null) {
+                            if (pickupLatLng != null) {
                                 // Tính khoảng cách
-                                calculateDistance(pickupLocation, driverLatLng);
+                                calculateDistance(pickupLatLng, driverLatLng);
 
                             }
                         } catch (NumberFormatException | NullPointerException e) {
@@ -538,8 +539,19 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         mDriverMarker = mMap.addMarker(new MarkerOptions()
                 .position(driverLatLng)
                 .title("Driver Location")
-                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_app_bee_driver)));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pickupLocation, 15));
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_driver_foreground)));
+
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(pickupLatLng); // Thêm điểm 1
+        builder.include(driverLatLng); // Thêm điểm 2
+        LatLngBounds bounds = builder.build();
+
+// Lấy kích thước của màn hình để tính toán padding
+        int padding = 100; // Padding (khoảng cách từ các điểm đến viền màn hình, tính bằng pixel)
+
+// Di chuyển và zoom camera đến bounds
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+//        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pickupLatLng, 15));
     }
 
     //luư tọa độ điểm đón của khách
@@ -653,10 +665,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                         double latitude = location.getLatitude();
                         double longitude = location.getLongitude();
                         // Log.d(TAG, "onLocationResult: Location - Lat: " + latitude + ", Lng: " + longitude);
-                        userLocation = new LatLng(latitude, longitude);
+                        customerLatLng = new LatLng(latitude, longitude);
 
                         if (!hasMovedCamera) {
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 20)); // Di chuyển camera đến vị trí mới
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(customerLatLng, 20)); // Di chuyển camera đến vị trí mới
                             hasMovedCamera = true; // Đánh dấu là đã di chuyển camera
                         }
                     } else {

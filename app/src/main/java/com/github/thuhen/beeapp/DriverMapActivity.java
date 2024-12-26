@@ -37,6 +37,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.github.thuhen.beeapp.databinding.ActivityDriverMapBinding;
@@ -160,6 +161,16 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 }
                 switch (status) {
                     case 1:
+                        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                        builder.include(customerLatLng); // Thêm điểm 1
+                        builder.include(driverLatLng); // Thêm điểm 2
+                        LatLngBounds bounds = builder.build();
+
+// Lấy kích thước của màn hình để tính toán padding
+                        int padding = 100; // Padding (khoảng cách từ các điểm đến viền màn hình, tính bằng pixel)
+
+// Di chuyển và zoom camera đến bounds
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
                         mRideStatus.setText(R.string.end_ride);
                         status = 2;
                         break;
@@ -391,9 +402,19 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                                 pickupMarker = mMap.addMarker(new MarkerOptions()
                                         .position(customerLatLng)
                                         .title("Customer Pickup Location")
-                                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_app_bee_customer)));
+                                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground)));
                                 // Move and zoom camera to customer location
-                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(customerLatLng, 15));
+//                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(customerLatLng, 15));
+                                LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                                builder.include(customerLatLng); // Thêm điểm 1
+                                builder.include(driverLatLng); // Thêm điểm 2
+                                LatLngBounds bounds = builder.build();
+
+// Lấy kích thước của màn hình để tính toán padding
+                                int padding = 100; // Padding (khoảng cách từ các điểm đến viền màn hình, tính bằng pixel)
+
+// Di chuyển và zoom camera đến bounds
+                                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
                                 Log.d(TAG, "Customer Pickup Location: Lat=" + locationLat + ", Lng=" + locationLng);
 
 

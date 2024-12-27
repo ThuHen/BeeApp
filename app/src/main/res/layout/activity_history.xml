@@ -19,7 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/balance_current"
-            android:visibility="visible"
+            android:visibility="gone"
             android:textAlignment="center"
             android:padding="20dp"
             android:textSize="20sp"

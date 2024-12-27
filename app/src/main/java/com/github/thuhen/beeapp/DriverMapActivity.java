@@ -76,7 +76,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private LatLng destinationLocation;
     private Marker destinationMarker;
     private LatLng customerLatLng;
-    private int status = 0;
+    private int statusWorking = 0;
+//    0= chua co khách,da ket thuc ;1= ghep được khách;2=đã chở khách, đang đi
     private Double routeDistance = (double) -1;
     private Marker pickupMarker;
     private Button mRideStatus;
@@ -159,11 +160,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     Toast.makeText(DriverMapActivity.this, R.string.no_customer, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                switch (status) {
+                switch (statusWorking) {
                     case 1:
                         LatLngBounds.Builder builder = new LatLngBounds.Builder();
                         builder.include(customerLatLng); // Thêm điểm 1
-                        builder.include(driverLatLng); // Thêm điểm 2
+                        builder.include(destinationLocation); // Thêm điểm 2
                         LatLngBounds bounds = builder.build();
 
 // Lấy kích thước của màn hình để tính toán padding
@@ -172,12 +173,13 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 // Di chuyển và zoom camera đến bounds
                         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
                         mRideStatus.setText(R.string.end_ride);
-                        status = 2;
+                        statusWorking = 2;
                         break;
 
                     case 2:
                         recordRide();
                         endRide();
+                        statusWorking =0;
                         break;
                 }
 
@@ -229,7 +231,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         });
     }
 
-//    //Tính khoảng cách từ điểm đón đến điểm đến
+    //    //Tính khoảng cách từ điểm đón đến điểm đến
 //    private double calculateHaversineDistance(LatLng pickupLatLng, LatLng destinationLatLng) {
 //        final int R = 6371; // Bán kính Trái Đất tính bằng km
 //
@@ -245,6 +247,13 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 ////        return R * c * 1000; // Trả về khoảng cách bằng mét
 //        return R * c; // Trả về khoảng cách bằng mét
 //    }
+    private double calculateTotalCost(double distance) {
+        double driverPercentage = 0.4;
+        double costPerKm = 5; // Giá mỗi km
+        double baseFare = 10; // Phí cố định
+        double totalCost = baseFare + (distance) * costPerKm;
+        return totalCost;
+    }
 
     private void recordRide() {
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -260,14 +269,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         /// Tính khoảng cách giữa điểm đón và điểm đến
         double distance = calculateDistance(customerLatLng, destinationLocation);
         rideDistance = (float) distance; // Lưu khoảng cách vào rideDistance
-        Log.d(TAG, "Distance (haversine): " + (rideDistance / 1000) + " km");
+        Log.d(TAG, "Distance (haversine): " + (rideDistance) + " km");
 
         // Tính toán chi phí chuyến đi
-        double driverPercentage = 0.4;
-        double costPerKm = 5000; // Giá mỗi km
-        double baseFare = 10000; // Phí cố định
-        double totalCost = baseFare + (rideDistance) * costPerKm;
-        double ridePrice = rideDistance * costPerKm * driverPercentage;
+
+        double totalCost = calculateTotalCost(rideDistance);
         HashMap<String, Object> map = new HashMap<>();
         map.put("driverId", driverId);
         map.put("customerId", customerId);
@@ -287,7 +293,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         map.put("customerPaid", true); // Khách hàng đã thanh toán
         map.put("driverPaidOut", false); // Tài xế chưa được trả tiền
         historyRef.child(historyId).updateChildren(map);
-        Log.d(TAG, "recordRide: Ride recorded successfully. Total cost: " + totalCost + " VND");
+        Log.d(TAG, "recordRide: Ride recorded successfully. Total cost: " + totalCost + " nghìn VND");
 
     }
 
@@ -312,7 +318,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // Nếu tài xế đã nhận yêu cầu từ khách hàng
                 if (snapshot.exists()) {
-                    status = 1;
+                    statusWorking = 1;
                     // Lấy ID của khách hàng từ customerRideId
                     customerId = snapshot.getValue().toString();
                     Log.d(TAG, "Assigned customer ID: " + customerId);
@@ -401,7 +407,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                                     pickupMarker.remove();
                                 pickupMarker = mMap.addMarker(new MarkerOptions()
                                         .position(customerLatLng)
-                                        .title("Customer Pickup Location")
+                                        .title("Điểm đón khách")
                                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground)));
                                 // Move and zoom camera to customer location
 //                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(customerLatLng, 15));
@@ -471,7 +477,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                             destinationMarker.remove();
                         destinationMarker = mMap.addMarker(new MarkerOptions()
                                 .position(destinationLocation)
-                                .title("Customer Pickup Location")
+                                .title("Đích đến")
                                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground)));
                         // Move and zoom camera to customer location
                         //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLocation, 15));
@@ -640,6 +646,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             startLocationUpdates();
             getAssignedCustomer();
         } else {
+            if (statusWorking == 1) {
+                mWorkingSwitch.setChecked(true);
+                Toast.makeText(DriverMapActivity.this, R.string.request_done_ride, Toast.LENGTH_SHORT).show();
+                return;
+            }
             saveLocationOnFb = false;
             deleteDriverAvailableOnFirebase();
         }

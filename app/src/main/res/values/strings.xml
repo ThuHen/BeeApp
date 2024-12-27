@@ -18,7 +18,7 @@
     <string name="call_bee">Gọi Bee</string>
     <string name="log_out">Đăng xuất</string>
     <string name="title_activity_vidu">Ví dụ</string>
-    <string name="pickup_here">Đón khách tại đây</string>
+    <string name="pickup_here">Đón tôi</string>
     <string name="looking_for_driver_location">Đang tìm tài xế gần bạn...</string>
     <string name="driver_found">Tài xế cách bạn %.2f km</string>
     <string name="driver_is_here">Tài xế đã đến</string>
@@ -44,5 +44,9 @@
     <string name="bike">Xe máy</string>
     <string name="request_fill_info">Vui lòng cung cấp đầy đủ thông tin trong phần cài đặt trước khi hoạt.</string>
     <string name="working">Bật chế độ làm việc</string>
-    <string name="balance_current">Số dư tài khoản: 1000 vnd</string>
+    <string name="balance_current">Số dư tài khoản</string>
+    <string name="distance">Khoảng cách:</string>
+    <string name="cost">Giá tiền:</string>
+    <string name="pay_method">Phương thức thanh toán:</string>
+    <string name="request_done_ride">Vui lòng kết thúc chuyến đi trước khi kết thúc</string>
 </resources>

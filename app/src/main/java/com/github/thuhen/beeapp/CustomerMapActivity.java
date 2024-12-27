@@ -54,6 +54,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -68,7 +69,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Button mLogout;
     private Button mSetting;
     private Button mHistory;
+    private TextView mDistance;
+    private TextView mCost;
     //vi tri đón khách nay
+    private LinearLayout mCostLayout;
     private LatLng pickupLatLng;
     private Marker pickupMarker;
     private LatLng destinationLocation;
@@ -83,6 +87,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private static final String TAG = "CustomerMapActivity"; // Tag dùng trong Logcat
     private Boolean requestBol = false;
     private RadioGroup mRadioGroup;
+    private RadioGroup mRadioGroupPay;
     private String requestservice;
 
     @Override
@@ -112,13 +117,19 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         driverName = findViewById(R.id.driver_name);
         driverPhone = findViewById(R.id.driver_phone);
         driverCar = findViewById(R.id.driver_car);
-        mRadioGroup= findViewById(R.id.radioGroup);
+        mRadioGroup = findViewById(R.id.radioGroup);
         mRadioGroup.check(R.id.xeMay);
+        mRadioGroupPay = findViewById(R.id.radioGroup_pay);
+        mRadioGroupPay.check(R.id.cash);
         mLogout = (Button) findViewById(R.id.logout);
         mRequest = findViewById(R.id.button_call_request);
         mSetting = (Button) findViewById(R.id.setting);
         mHistory = (Button) findViewById(R.id.history);
         mRatingBar = (RatingBar) findViewById(R.id.ratingBar);
+        mCostLayout = findViewById(R.id.cost_layout);
+        mDistance = findViewById(R.id.distance);
+        mCost = findViewById(R.id.cost);
+
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -144,13 +155,15 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     Log.e(TAG, "onClick: destinationMarker is null");
                     return;
                 }
+
                 if (!requestBol) {
-                    int selectedId= mRadioGroup.getCheckedRadioButtonId();
-                    final RadioButton radioButton = (RadioButton)  findViewById(selectedId);
-                    if (radioButton.getText()==null){
+                    checkPayMomo();
+                    int selectedId = mRadioGroup.getCheckedRadioButtonId();
+                    final RadioButton radioButton = (RadioButton) findViewById(selectedId);
+                    if (radioButton.getText() == null) {
                         return;
                     }
-                    requestservice= radioButton.getText().toString();
+                    requestservice = radioButton.getText().toString();
                     requestBol = true;
                     fusedLocationProviderClient.getLastLocation()
                             .addOnSuccessListener(CustomerMapActivity.this, new OnSuccessListener<Location>() {
@@ -190,6 +203,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                         driverFoundID = null;
                     }
                     endRide();
+
                 }
             }
         });
@@ -252,6 +266,28 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 //                });
     }
 
+    private void checkPayMomo() {
+        Log.d(TAG, "checkPayMomo: ");
+        // Lấy ID của RadioButton được chọn
+        int selectedId = mRadioGroupPay.getCheckedRadioButtonId();
+        // Kiểm tra xem có RadioButton nào được chọn không
+        if (selectedId == -1) {
+            // Nếu chưa chọn, thông báo cho người dùng
+            Toast.makeText(this, "Vui lòng chọn phương thức thanh toán", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+// Lấy RadioButton được chọn
+        RadioButton selectedRadioButton = findViewById(selectedId);
+
+// Kiểm tra nội dung text của RadioButton và thực hiện hành động tương ứng
+        if (selectedRadioButton.getText().equals("MoMo")) {
+            // Xử lý khi chọn MoMo
+            Toast.makeText(this, "Bạn đã chọn thanh toán bằng MoMo", Toast.LENGTH_SHORT).show();
+            // Thêm logic cho thanh toán MoMo
+        }
+    }
+
     private DatabaseReference driverHasEndRef;
     ValueEventListener driverHasEndListener;
 
@@ -290,6 +326,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         driverHasEndRef.removeEventListener(driverHasEndListener);
         cancelRequestClosestDriver();
         hideDriverInfoUI();
+        flagCalCost = true;
     }
 
     private void hideDriverInfoUI() {
@@ -317,6 +354,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             mDriverMarker.remove();
 //        if (destinationMarker != null)
 //            destinationMarker.remove();
+        mCostLayout.setVisibility(View.VISIBLE);
         mRequest.setText(R.string.call_bee);
     }
 
@@ -342,17 +380,17 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             public void onKeyEntered(String key, GeoLocation location) {
                 // Nếu tài xế đã được ghép, lấy tọa độ vị trí tài xế
                 if (!driverFound && requestBol) {
-                    DatabaseReference mCustomerDatabase= FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(key);
+                    DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(key);
                     mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            if (snapshot.exists()&& snapshot.getChildrenCount()>0){
+                            if (snapshot.exists() && snapshot.getChildrenCount() > 0) {
                                 Map<String, Object> drivermap = (Map<String, Object>) snapshot.getValue();
-                                if (driverFound){
+                                if (driverFound) {
                                     return;
                                 }
 
-                                if (drivermap.get("service").equals(requestservice)){
+                                if (drivermap.get("service").equals(requestservice)) {
                                     driverFound = true;
                                     driverFoundID = key;//
                                     Log.e(TAG, "getClosestDriver: Driver ID is " + key);
@@ -379,13 +417,12 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                                 }
                             }
                         }
+
                         @Override
                         public void onCancelled(@NonNull DatabaseError error) {
 
                         }
                     });
-
-
 
 
                 }
@@ -425,6 +462,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private void getDriverPickupInfo() {
         Log.d(TAG, "getDriverPickupInfo: Getting driver pickup info");
         // Hiển thị thông tin tài xế
+        flagCalCost=false;
+        mCostLayout.setVisibility(View.GONE);
         mDriverInfo.setVisibility(View.VISIBLE);
         DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference()
                 .child("Users").child("Drivers").child(driverFoundID);
@@ -506,7 +545,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                             updateDriverMarker(driverLat, driverLng);
                             if (pickupLatLng != null) {
                                 // Tính khoảng cách
-                                calculateDistance(pickupLatLng, driverLatLng);
+                                double distance_driver = calculateDistance(pickupLatLng, driverLatLng);
+                                if (distance_driver < 0.01)
+                                    mRequest.setText(R.string.driver_is_here);
+                                else {
+                                    mRequest.setText(String.format("Driver Found: %.2f km away", distance_driver));
+
+                                }
+                                Log.d(TAG, "Distance between Customer and Driver: " + distance_driver + " km");
 
                             }
                         } catch (NumberFormatException | NullPointerException e) {
@@ -538,7 +584,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         // Thêm marker mới cho vị trí tài xế
         mDriverMarker = mMap.addMarker(new MarkerOptions()
                 .position(driverLatLng)
-                .title("Driver Location")
+                .title("Tài xế đang đến")
                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_driver_foreground)));
 
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -574,10 +620,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 //
 //    }
 
-    private void calculateDistance(LatLng customerLatLng, LatLng driverLatLng) {
+    private double calculateDistance(LatLng customerLatLng, LatLng driverLatLng) {
         if (customerLatLng == null || driverLatLng == null) {
             Log.e(TAG, "calculateDistance: One of the locations is null");
-            return;
+            return -1;
         }
         // Tạo đối tượng Location cho Customer
         Location customerLocation = new Location("");
@@ -591,15 +637,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         float distanceInMeters = customerLocation.distanceTo(driverLocation);
         // Chuyển đổi sang km
         float distanceInKm = distanceInMeters / 1000;
-        if (distanceInKm < 0.01)
-            mRequest.setText(R.string.driver_is_here);
-        else {
-            mRequest.setText(String.format("Driver Found: %.2f km away", distanceInKm));
 
-        }
-        Log.d(TAG, "Distance between Customer and Driver: " + distanceInKm + " km");
         // Hiển thị khoảng cách
         // Cập nhật TextView hoặc Button
+        return distanceInKm;
 
     }
 
@@ -639,7 +680,28 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         }
     }
 
+    private double calculateTotalCost(double distance) {
+        double driverPercentage = 0.4;
+        double costPerKm = 5; // Giá mỗi km
+        double baseFare = 10; // Phí cố định
+        double totalCost = baseFare + (distance) * costPerKm;
+        return totalCost;
+    }
 
+    private void getDestinateCost(boolean b) {
+        if (!b) return;
+        mCostLayout.setVisibility(View.VISIBLE);
+        mDriverInfo.setVisibility(View.GONE);
+        double distance;
+        double cost;
+        distance = calculateDistance(customerLatLng, destinationLocation);
+        cost = calculateTotalCost(distance);
+        mDistance.setText(String.format(Locale.getDefault(), "%.2f km", distance));
+        mCost.setText(String.format(Locale.getDefault(), "%.2f nghìn VND", cost));
+
+    }
+
+    private boolean flagCalCost= true;
     private boolean hasMovedCamera = false;
 
     @SuppressLint("MissingPermission")
@@ -671,6 +733,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(customerLatLng, 20)); // Di chuyển camera đến vị trí mới
                             hasMovedCamera = true; // Đánh dấu là đã di chuyển camera
                         }
+                        if (destinationLocation != null)
+                            getDestinateCost(flagCalCost);
                     } else {
                         Log.e(TAG, "onLocationResult: LastLocationResult is null");
                         return;
@@ -717,6 +781,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         stopLocationUpdates();
     }
 
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         Log.d(TAG, "onMapReady: Map is ready");
@@ -748,7 +813,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 }
                 // Thêm marker mới cho điểm được chọn
                 destinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLocation)
-                        .title("Pickup Location")
+                        .title("Đích đến")
                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground)));
                 Toast.makeText(this, "Destination location set!", Toast.LENGTH_SHORT).show();
                 mRequest.setText(R.string.call_bee);

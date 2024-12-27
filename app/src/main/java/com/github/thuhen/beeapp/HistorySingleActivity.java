@@ -241,10 +241,8 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                 LatLng pickupLocation = new LatLng(pickupLatLng.latitude, pickupLatLng.longitude);
                 LatLng destinationLocation = new LatLng(destinationLatLng.latitude, destinationLatLng.longitude);
                 mMap.addMarker(new MarkerOptions().position(destinationLocation)
-                        .title("Đích đến")
                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground)));
                 mMap.addMarker(new MarkerOptions().position(pickupLocation)
-                        .title("Điểm đón")
                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground)));
             } else {
                 Log.e("MapError", "pickupLatLng or destinationLatLng is null");

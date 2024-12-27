@@ -51,6 +51,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -85,6 +86,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private boolean saveLocationOnFb = false; // Mặc định không gọi
     private Location mLastCustomerLocation;
     private float rideDistance = 0;
+    private LinearLayout mCostLayout;
+    private TextView mDistance;
+    private TextView mCost;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,10 +118,12 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         customerProfileImage = findViewById(R.id.customer_profile_image);
         customerName = findViewById(R.id.customer_name);
         customerPhone = findViewById(R.id.customer_phone);
-//        customerDestination = findViewById(R.id.customer_Destination);
         mRideStatus = findViewById(R.id.btn_ride_status);
         mHistory = (Button) findViewById(R.id.history);
         mWorkingSwitch = findViewById(R.id.workingSwitch);
+        mCostLayout = findViewById(R.id.cost_layout);
+        mDistance = findViewById(R.id.distance);
+        mCost = findViewById(R.id.cost);
 
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -172,6 +178,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
 // Di chuyển và zoom camera đến bounds
                         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+                        getDestinateCost();
                         mRideStatus.setText(R.string.end_ride);
                         statusWorking = 2;
                         break;
@@ -197,7 +204,16 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     public interface UserInformationCallback {
         void onComplete(boolean isComplete);
     }
+    private void getDestinateCost() {
+        mCostLayout.setVisibility(View.VISIBLE);
+        double distance;
+        double cost;
+        distance = calculateDistance(customerLatLng, destinationLocation);
+        cost = calculateTotalCost(distance);
+        mDistance.setText(String.format(Locale.getDefault(), "%.2f km", distance));
+        mCost.setText(String.format(Locale.getDefault(), "%.2f nghìn VND", cost));
 
+    }
     private void checkUserInformation(UserInformationCallback callback) {
         String userId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         DatabaseReference mDriverDatabase = FirebaseDatabase.getInstance().getReference()
@@ -367,6 +383,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private void hideCustomerInfoUI() {
         Log.d(TAG, "hideCustomerInfoUI: Hiding customer info UI");
         mCustomerInfor.setVisibility(View.GONE);
+        mCostLayout.setVisibility(View.GONE);
         customerName.setText("");
         customerPhone.setText("");
 //        customerDestination.setText(R.string.destination);

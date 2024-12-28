@@ -125,7 +125,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                             String longitude = child.child("longitude").getValue().toString();
 
                             // Kết hợp latitude và longitude thành chuỗi tọa độ
-                            String coordinates = "Tọa độ điểm đến\n ("+ latitude + ", " + longitude+")";
+                            String coordinates = "Tọa độ điểm đến\n (" + latitude + ", " + longitude + ")";
                             rideLocation.setText(coordinates); // Hiển thị tọa độ lên TextView
                         }
 
@@ -241,9 +241,12 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                 LatLng pickupLocation = new LatLng(pickupLatLng.latitude, pickupLatLng.longitude);
                 LatLng destinationLocation = new LatLng(destinationLatLng.latitude, destinationLatLng.longitude);
                 mMap.addMarker(new MarkerOptions().position(destinationLocation)
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground)));
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground))
+                        .anchor(0.5f, 0.5f));
+
                 mMap.addMarker(new MarkerOptions().position(pickupLocation)
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground)));
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground))
+                        .anchor(0.5f, 0.5f));
             } else {
                 Log.e("MapError", "pickupLatLng or destinationLatLng is null");
             }
@@ -253,7 +256,6 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
-
 
 
     }

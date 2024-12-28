@@ -185,7 +185,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
                                     pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLatLng)
                                             .title(getString(R.string.pickup_here))
-                                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground)))
+                                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground))
+                                            .anchor(0.5f,0.5f))
                                     ;
 
                                     getClosestDriver();
@@ -585,7 +586,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         mDriverMarker = mMap.addMarker(new MarkerOptions()
                 .position(driverLatLng)
                 .title("Tài xế đang đến")
-                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_driver_foreground)));
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_driver_foreground))
+                .anchor(0.5f,0.5f));
 
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         builder.include(pickupLatLng); // Thêm điểm 1
@@ -814,7 +816,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                 // Thêm marker mới cho điểm được chọn
                 destinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLocation)
                         .title("Đích đến")
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground)));
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground))
+                        .anchor(0.5f,0.5f));
                 Toast.makeText(this, "Destination location set!", Toast.LENGTH_SHORT).show();
                 mRequest.setText(R.string.call_bee);
                 // Lưu tọa độ điểm đón vào Firebase

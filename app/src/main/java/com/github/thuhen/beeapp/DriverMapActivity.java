@@ -427,7 +427,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                                 pickupMarker = mMap.addMarker(new MarkerOptions()
                                         .position(customerLatLng)
                                         .title("Điểm đón khách")
-                                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground)));
+                                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_customer_foreground))
+                                        .anchor(0.5f,0.5f));
                                 // Move and zoom camera to customer location
 //                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(customerLatLng, 15));
                                 LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -497,7 +498,8 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         destinationMarker = mMap.addMarker(new MarkerOptions()
                                 .position(destinationLatLng)
                                 .title("Đích đến")
-                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground)));
+                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground))
+                                .anchor(0.5f,0.5f));
                         // Move and zoom camera to customer location
                         //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destinationLocation, 15));
                         Log.d(TAG, "Customer destination Location: Lat=" + latitude + ", Lng=" + longitude);

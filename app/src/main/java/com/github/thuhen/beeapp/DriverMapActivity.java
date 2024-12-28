@@ -74,9 +74,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private TextView customerName;
     private TextView customerPhone;
     //    private TextView customerDestination;
-    private LatLng destinationLocation;
+    private LatLng destinationLatLng;
     private Marker destinationMarker;
     private LatLng customerLatLng;
+
     private int statusWorking = 0;
 //    0= chua co khách,da ket thuc ;1= ghep được khách;2=đã chở khách, đang đi
     private Double routeDistance = (double) -1;
@@ -84,7 +85,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private Button mRideStatus;
     private boolean hasMovedCamera = false;
     private boolean saveLocationOnFb = false; // Mặc định không gọi
-    private Location mLastCustomerLocation;
+
     private float rideDistance = 0;
     private LinearLayout mCostLayout;
     private TextView mDistance;
@@ -170,11 +171,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     case 1:
                         LatLngBounds.Builder builder = new LatLngBounds.Builder();
                         builder.include(customerLatLng); // Thêm điểm 1
-                        builder.include(destinationLocation); // Thêm điểm 2
+                        builder.include(destinationLatLng); // Thêm điểm 2
                         LatLngBounds bounds = builder.build();
 
 // Lấy kích thước của màn hình để tính toán padding
-                        int padding = 100; // Padding (khoảng cách từ các điểm đến viền màn hình, tính bằng pixel)
+                        int padding = 150; // Padding (khoảng cách từ các điểm đến viền màn hình, tính bằng pixel)
 
 // Di chuyển và zoom camera đến bounds
                         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
@@ -208,7 +209,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         mCostLayout.setVisibility(View.VISIBLE);
         double distance;
         double cost;
-        distance = calculateDistance(customerLatLng, destinationLocation);
+        distance = calculateDistance(customerLatLng, destinationLatLng);
         cost = calculateTotalCost(distance);
         mDistance.setText(String.format(Locale.getDefault(), "%.2f km", distance));
         mCost.setText(String.format(Locale.getDefault(), "%.2f nghìn VND", cost));
@@ -283,7 +284,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         driverRef.child(historyId).setValue(true);
         customerRef.child(historyId).setValue(true);
         /// Tính khoảng cách giữa điểm đón và điểm đến
-        double distance = calculateDistance(customerLatLng, destinationLocation);
+        double distance = calculateDistance(customerLatLng, destinationLatLng);
         rideDistance = (float) distance; // Lưu khoảng cách vào rideDistance
         Log.d(TAG, "Distance (haversine): " + (rideDistance) + " km");
 
@@ -296,13 +297,13 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         map.put("rating", 0);
         map.put("timestamp", getCurrentTimestamp());
         Map<String, Double> destinationMap = new HashMap<>();
-        destinationMap.put("latitude", destinationLocation.latitude);
-        destinationMap.put("longitude", destinationLocation.longitude);
+        destinationMap.put("latitude", destinationLatLng.latitude);
+        destinationMap.put("longitude", destinationLatLng.longitude);
         map.put("destination", destinationMap);
         map.put("location/from/lat", customerLatLng.latitude);
         map.put("location/from/long", customerLatLng.longitude);
-        map.put("location/to/lat", destinationLocation.latitude);
-        map.put("location/to/long", destinationLocation.longitude);
+        map.put("location/to/lat", destinationLatLng.latitude);
+        map.put("location/to/long", destinationLatLng.longitude);
         map.put("distance", rideDistance);
         map.put("cost", totalCost);
         // Lưu trạng thái thanh toán
@@ -419,6 +420,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                                 double locationLat = Double.parseDouble(locationData.get(0).toString());
                                 double locationLng = Double.parseDouble(locationData.get(1).toString());
                                 customerLatLng = new LatLng(locationLat, locationLng);
+                                Log.d(TAG, "Customer Pickup Location: Lat=" + locationLat + ", Lng=" + locationLng);
                                 // Add marker to map
                                 if (pickupMarker != null)
                                     pickupMarker.remove();
@@ -434,7 +436,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                                 LatLngBounds bounds = builder.build();
 
 // Lấy kích thước của màn hình để tính toán padding
-                                int padding = 100; // Padding (khoảng cách từ các điểm đến viền màn hình, tính bằng pixel)
+                                int padding = 150; // Padding (khoảng cách từ các điểm đến viền màn hình, tính bằng pixel)
 
 // Di chuyển và zoom camera đến bounds
                                 mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
@@ -486,14 +488,14 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         double longitude = snapshot.child("longitude").getValue(Double.class);
 
                         // Tạo LatLng từ dữ liệu
-                        destinationLocation = new LatLng(latitude, longitude);
+                        destinationLatLng = new LatLng(latitude, longitude);
                         // In ra hoặc sử dụng LatLng
                         Log.d("getAssignedCustomerDestination", "Lấy được tọa độ điểm đến: ");
                         // Add marker to map
                         if (destinationMarker != null)
                             destinationMarker.remove();
                         destinationMarker = mMap.addMarker(new MarkerOptions()
-                                .position(destinationLocation)
+                                .position(destinationLatLng)
                                 .title("Đích đến")
                                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.icon_marker_destination_foreground)));
                         // Move and zoom camera to customer location
@@ -546,7 +548,22 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
         });
     }
-
+//    private LatLng mLastCustomerLatLng;
+//    private boolean startCalDistanceRoute= false;
+//    private void calculateDistanceRoute( boolean b) {
+//        // Kiểm tra và tính khoảng cách di chuyển
+//        if (!b) return;
+//        double distance =calculateDistance(driverLatLng, customerLatLng);
+//        if ( mLastCustomerLatLng!= null&& distance > 0.2) {
+//
+//            // Tính khoảng cách từ vị trí trước đó đến vị trí hiện tại
+//            rideDistance +=distance; // Khoảng cách tính bằng mét
+//            Log.d(TAG, "onLocationResult: Distance traveled: " + (rideDistance/1000) + " km"); // In khoảng cách bằng km
+//        }
+//
+//        // Cập nhật vị trí hiện tại
+//        mLastCustomerLatLng = driverLatLng;
+//    }
     private double calculateDistance(LatLng a, LatLng b) {
         if (a == null) {
             Log.e(TAG, "calculateDistance: LatLng a is null");
@@ -698,15 +715,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         // Log.d(TAG, "onLocationResult: Location - Lat: " + latitude + ", Lng: " + longitude);
                         driverLatLng = new LatLng(latitude, longitude);
 
-                        // Kiểm tra và tính khoảng cách di chuyển
-                        if (mLastCustomerLocation != null) {
-                            // Tính khoảng cách từ vị trí trước đó đến vị trí hiện tại
-                            rideDistance += mLastCustomerLocation.distanceTo(location); // Khoảng cách tính bằng mét
-                            Log.d(TAG, "onLocationResult: Distance traveled: " + (rideDistance / 1000) + " km"); // In khoảng cách bằng km
-                        }
-
-                        // Cập nhật vị trí hiện tại
-                        mLastCustomerLocation = location;
 
 
                         if (!hasMovedCamera) {

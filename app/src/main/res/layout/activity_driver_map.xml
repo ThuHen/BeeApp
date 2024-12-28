@@ -6,6 +6,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".DriverMapActivity">
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/id_map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -55,12 +60,6 @@
 
     </RelativeLayout>
 
-
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/id_map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -126,7 +125,7 @@
             android:layout_height="wrap_content"
             android:background="@color/white_settingLayout"
             android:orientation="horizontal"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <ImageView
                 android:id="@+id/customer_profile_image"
@@ -173,5 +172,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/pickup_customer" />
+
     </LinearLayout>
 </FrameLayout>

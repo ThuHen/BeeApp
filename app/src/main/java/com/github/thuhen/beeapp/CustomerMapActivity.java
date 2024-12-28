@@ -593,7 +593,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         LatLngBounds bounds = builder.build();
 
 // Lấy kích thước của màn hình để tính toán padding
-        int padding = 100; // Padding (khoảng cách từ các điểm đến viền màn hình, tính bằng pixel)
+        int padding = 150; // Padding (khoảng cách từ các điểm đến viền màn hình, tính bằng pixel)
 
 // Di chuyển và zoom camera đến bounds
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));

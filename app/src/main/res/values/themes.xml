@@ -11,15 +11,21 @@
         <item name="android:windowLightStatusBar">true</item>
 <!--         Đặt màu nền cho Button-->
         <item name="android:buttonStyle">@style/ButtonStyle</item>
+        <item name="android:textViewStyle">@style/TextViewStyle</item>
     </style>
     <!-- Style cho Button -->
     <style name="ButtonStyle" >
         <item name="android:background">@drawable/button_border</item>  <!-- Áp dụng Drawable cho Button -->
         <item name="android:textColor">@android:color/black</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">19sp</item>
         <item name="android:gravity">center</item>
         <item name="android:minHeight">48dp</item>
 
     </style>
+    <style name="TextViewStyle" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textSize">19sp</item> <!-- Thay đổi kích thước chữ -->
+<!--        <item name="android:textColor">#000000</item> &lt;!&ndash; (Tùy chọn) Màu chữ &ndash;&gt;-->
+    </style>
+
     <style name="Theme.BeeApp" parent="Base.Theme.BeeApp" />
 </resources>

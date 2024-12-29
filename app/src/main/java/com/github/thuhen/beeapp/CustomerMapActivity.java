@@ -789,8 +789,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         Log.d(TAG, "onMapReady: Map is ready");
         mMap = googleMap;
         // nút + và - zoom
-        mMap.getUiSettings().setZoomControlsEnabled(true);
-
+        //mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.getUiSettings().setZoomGesturesEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -840,20 +840,20 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            // Di chuyển nút Zoom + -
-            try {
-                View zoomControls = ((View) findViewById(Integer.parseInt("1"))).findViewById(Integer.parseInt("0"));
-                if (zoomControls != null) {
-                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) zoomControls.getLayoutParams();
-                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); // Căn lề phải
-//                    params.addRule(RelativeLayout.CENTER_VERTICAL); // Căn giữa theo chiều dọc
-                    params.addRule(RelativeLayout.BELOW, ((View) findViewById(Integer.parseInt("2"))).getId());
-                    params.setMargins(0, 0, 30, 0); // Cách mép phải 30px
-                    zoomControls.setLayoutParams(params);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+//            // Di chuyển nút Zoom + -
+//            try {
+//                View zoomControls = ((View) findViewById(Integer.parseInt("1"))).findViewById(Integer.parseInt("0"));
+//                if (zoomControls != null) {
+//                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) zoomControls.getLayoutParams();
+//                    params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); // Căn lề phải
+////                    params.addRule(RelativeLayout.CENTER_VERTICAL); // Căn giữa theo chiều dọc
+//                    params.addRule(RelativeLayout.BELOW, ((View) findViewById(Integer.parseInt("2"))).getId());
+//                    params.setMargins(0, 0, 30, 0); // Cách mép phải 30px
+//                    zoomControls.setLayoutParams(params);
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
         });
 
     }
